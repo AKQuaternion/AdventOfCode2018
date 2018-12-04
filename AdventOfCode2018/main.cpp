@@ -6,30 +6,36 @@
 //  Copyright © 2018 Chris Hartman. All rights reserved.
 //
 
+#include <fstream>
 #include <iostream>
+#include <iterator>
+#include <string>
+#include <vector>
 using std::cout;
 using std::endl;
-using std::cin;
-#include <algorithm>
-#include <iterator>
-#include <vector>
-using std::vector;
+using std::string;
+
 #include <range/v3/all.hpp>
 namespace r=ranges;
 namespace rv=r::view;
-#include <fstream>
-using std::ifstream;
-#include <string>
-using std::string;
+
+//*********
+//https://blog.tartanllama.xyz/passing-overload-sets/
+#define FWD(...) std::forward<decltype(__VA_ARGS__)>(__VA_ARGS__)
+
+#define LIFT(X) [](auto &&... args) \
+noexcept(noexcept(X(FWD(args)...)))  \
+-> decltype(X(FWD(args)...)) \
+{  \
+return X(FWD(args)...); \
+}
+//*********
 
 int main() {
-   ifstream fin("/Users/hartman/Documents/Xcode projects/AdventOfCode2018/day1");
+   std::ifstream fin("/Users/hartman/Documents/Xcode projects/AdventOfCode2018/day1");
    cout << "Reading input." << endl;
-   std::istream_iterator<string> cinBegin{fin};
-   std::istream_iterator<string> cinEnd;
-   vector<string> v;
-   std::copy(cinBegin,cinEnd,std::back_inserter(v));
-   auto numbers = rv::all(v) | rv::transform([](auto x){return std::stoi(x);});
+   
+   auto numbers = r::getlines(fin) | rv::transform(LIFT(std::stoi));
    cout << r::accumulate(numbers,0) << endl;
    return 0;
 }

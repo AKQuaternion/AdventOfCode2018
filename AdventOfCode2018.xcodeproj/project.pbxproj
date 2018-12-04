@@ -25,6 +25,7 @@
 /* Begin PBXFileReference section */
 		4953BF9B21B646A400DA16E6 /* AdventOfCode2018 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AdventOfCode2018; sourceTree = BUILT_PRODUCTS_DIR; };
 		4953BF9E21B646A400DA16E6 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		4953BFA521B6FCE200DA16E6 /* day1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,6 +44,7 @@
 			children = (
 				4953BF9D21B646A400DA16E6 /* AdventOfCode2018 */,
 				4953BF9C21B646A400DA16E6 /* Products */,
+				4953BFA521B6FCE200DA16E6 /* day1 */,
 			);
 			sourceTree = "<group>";
 		};
@@ -239,7 +241,9 @@
 		4953BFA321B646A400DA16E6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = /usr/local/include;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -247,7 +251,9 @@
 		4953BFA421B646A400DA16E6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = /usr/local/include;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
