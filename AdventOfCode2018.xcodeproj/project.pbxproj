@@ -27,6 +27,7 @@
 		4953BF9E21B646A400DA16E6 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4953BFA521B6FCE200DA16E6 /* day1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day1; sourceTree = "<group>"; };
 		49F8428C21B78F9D004CB5FC /* day2 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day2; sourceTree = "<group>"; };
+		49F8428D21B836B7004CB5FC /* day3 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +48,7 @@
 				4953BF9C21B646A400DA16E6 /* Products */,
 				4953BFA521B6FCE200DA16E6 /* day1 */,
 				49F8428C21B78F9D004CB5FC /* day2 */,
+				49F8428D21B836B7004CB5FC /* day3 */,
 			);
 			sourceTree = "<group>";
 		};
