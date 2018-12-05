@@ -20,7 +20,22 @@ using std::endl;
 using std::string;
 using std::get;
 
-#include <range/v3/all.hpp>
+#include <range/v3/algorithm/count_if.hpp>
+#include <range/v3/algorithm/find_if.hpp>
+#include <range/v3/getlines.hpp>
+#include <range/v3/istream_range.hpp>
+#include <range/v3/view_interface.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/cartesian_product.hpp>
+#include <range/v3/view/cycle.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/join.hpp>
+#include <range/v3/view/partial_sum.hpp>
+#include <range/v3/view/take.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/zip.hpp>
+#include <range/v3/view/zip_with.hpp>
+
 namespace r=ranges;
 namespace rv=r::view;
 
@@ -87,12 +102,12 @@ void day2star2() {
    };
    
    auto matches = [](std::string_view s1, std::string_view s2) {
-      return r::accumulate(rv::zip(s1,s2),std::string{},
-               [](auto s, auto p) {
-                  if(p.first==p.second) s+= p.first; return s;
-               });
+                     return rv::zip(s1,s2)
+                              | rv::filter([](auto p){return p.first==p.second;})
+                              | rv::transform([](auto p){return p.first;})
+                              | r::to_<std::string>();
    };
-   
+
    auto word = rv::cartesian_product(ids,ids)
                | rv::filter([&](const auto &p){
                   const auto &[id1,id2]=p; return hammingDistance(id1,id2)==1;
@@ -144,10 +159,10 @@ void day3stars() {
 }
 
 int main() {
-//   day1star1();
-//   day1star2();
-//   day2star1();
-//   day2star2();
+   day1star1();
+   day1star2();
+   day2star1();
+   day2star2();
    day3stars();
    return 0;
 }
