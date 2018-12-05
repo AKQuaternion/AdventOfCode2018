@@ -36,7 +36,7 @@ return X(FWD(args)...); \
 const string DIRECTORY = "/Users/hartman/Documents/Xcode projects/AdventOfCode2018/";
 
 template <typename Rng,CONCEPT_REQUIRES_(!r::BoundedRange<Rng>())>
-auto back(Rng r) -> r::value_type_t<r::iterator_t<Rng>> {
+auto back(Rng &&r) -> r::value_type_t<r::iterator_t<Rng>> {
    r::value_type_t<r::iterator_t<Rng>> ret{};
    for(auto && v:r)
       ret=std::move(v);
@@ -45,31 +45,58 @@ auto back(Rng r) -> r::value_type_t<r::iterator_t<Rng>> {
 
 void day1star1() {
    std::ifstream fin(DIRECTORY+"day1");
-   auto numbers = r::getlines(fin) | rv::transform(LIFT(std::stoi)) | rv::partial_sum();
-   cout << "day1 star1: " << back(numbers) << endl;
+   auto numbers = r::getlines(fin) | rv::transform(LIFT(std::stoi)) | rv::partial_sum;
+   cout << "Day 1 star 1: " << back(numbers) << endl;
 }
 
-void day1star2() {
+template <typename Rng,CONCEPT_REQUIRES_(r::Range<Rng>())>
+auto repeatedValuesHelper(Rng &&seen, Rng &&input)
+     -> r::any_view<r::value_type_t<r::iterator_t<Rng>>> {
+   if(input.begin() == input.end())
+      return input;
+   auto &&i = *input.begin();
+   if(r::count(seen,i)>0)
+      return rv::concat(rv::single(i),repeatedValuesHelper(r::any_view<int>(seen),r::any_view<int>(rv::drop(input,1))));
+   return repeatedValuesHelper(r::any_view<int>(rv::concat(seen,rv::single(i))),r::any_view<int>(rv::drop(input,1)));
+}
+
+template <typename Rng,CONCEPT_REQUIRES_(r::Range<Rng>())>
+auto repeatedValues(Rng input) {
+   return repeatedValuesHelper( r::any_view<int>(rv::empty<int>()), r::any_view<int>(input));
+}
+
+void day1star2a() {
    std::ifstream fin(DIRECTORY+"day1");
    
-   std::vector<int> numbers;
-   ranges::copy(r::getlines(fin) | rv::transform(LIFT(std::stoi)), ranges::back_inserter(numbers));
+   auto numbers = r::istream_range<int>(fin) | r::to_vector;
+
+   std::unordered_set<int> seen;
+   auto repeats = rv::all(numbers)
+                     | rv::cycle
+                     | rv::partial_sum
+                     | rv::remove_if([&seen](int i) {return seen.insert(i).second;}); //insert returns true if it's new
+   
+   cout << "Day 1 star 2: " << *repeats.begin() << endl;
+}
+
+void day1star2b() {
+   std::ifstream fin(DIRECTORY+"day1");
+   
+   auto numbers = r::istream_range<int>(fin) | r::to_vector;
    
    std::unordered_set<int> seen;
-   auto notSeenBefore = [&seen](int i) {
-      if(seen.count(i)==0) {
-         seen.insert(i);
-         return true;
-      }
-      return false;
-   };
+   auto frequencies = rv::all(numbers)
+      | rv::cycle
+      | rv::partial_sum;
    
-   auto repeats = rv::all(numbers) | rv::cycle | rv::partial_sum() | rv::remove_if(notSeenBefore);
-   cout << "day1 star2: " << *repeats.begin() << endl;
+   cout << "Day 1 star 2: " << (repeatedValues(frequencies) | ranges::view::take(1)) << endl;
 }
 
 int main() {
    day1star1();
-   day1star2();
+   day1star2b();
+//   static int const ints[] = {1,2,3,1,2,5,6,3,4,5,6,7,8,9};
+//   auto intsRange = r::any_view<int>(ints);
+//   cout << repeatedValues(intsRange) << "\n";
    return 0;
 }
