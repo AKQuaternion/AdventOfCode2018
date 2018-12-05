@@ -104,28 +104,26 @@ void day2star2() {
    cout << "Day 2 star 2: " << word << "\n";
 }
 
-void day3star1() {
+void day3stars() {
    struct Claim {
-      int left,top,width,height;
+      int elf,left,top,width,height;
    };
    auto str2Claim = [](const string &s) {
       //#14 @ 851,648: 13x15
       std::istringstream sin(s);
-      std::string s_;
-      char c_;
+      char _;
       Claim c;
-      sin >> s_ >> c_ >> c.left >> c_ >> c.top >> c_ >> c.width >> c_ >> c.height;
+      sin >> c.elf >> _ >> c.left >> _ >> c.top >> _ >> c.width >> _ >> c.height;
       return c;
    };
    
    std::ifstream fin(DIRECTORY+"day3");
    auto claims = r::getlines(fin) | rv::transform(str2Claim);
 
-
    static const int DIM=1000;
    using Cloth = std::vector<int>;
    
-   auto cover = [](Cloth &cloth, Claim c) -> Cloth & {
+   auto cover = [](Cloth &cloth, const Claim &c) -> Cloth & {
       for(auto x=0; x<c.width; ++x)
          for(auto y=0; y<c.height; ++y)
             cloth[DIM*(c.left+x)+c.top+y]++;
@@ -136,6 +134,13 @@ void day3star1() {
    freshCloth = r::accumulate(claims,freshCloth,cover);
 
    cout << "Day 3 star 1: " << r::count_if(freshCloth,[](auto n){return n>1;}) << endl;
+//   auto intact = r::find_if(claims,[&freshCloth](const Claim &c){
+//                              for(auto x=0; x<c.width; ++x)
+//                                 for(auto y=0; y<c.height; ++y)
+//                                    if(freshCloth[DIM*(c.left+x)+c.top+y] != 1)
+//                                       return false;
+//                              return true;});
+//   cout << "Day 3 star 2: " << (*intact).elf << endl;
 }
 
 int main() {
@@ -143,6 +148,6 @@ int main() {
 //   day1star2();
 //   day2star1();
 //   day2star2();
-   day3star1();
+   day3stars();
    return 0;
 }
