@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <sstream>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
@@ -103,10 +104,45 @@ void day2star2() {
    cout << "Day 2 star 2: " << word << "\n";
 }
 
+void day3star1() {
+   struct Claim {
+      int left,top,width,height;
+   };
+   auto str2Claim = [](const string &s) {
+      //#14 @ 851,648: 13x15
+      std::istringstream sin(s);
+      std::string s_;
+      char c_;
+      Claim c;
+      sin >> s_ >> c_ >> c.left >> c_ >> c.top >> c_ >> c.width >> c_ >> c.height;
+      return c;
+   };
+   
+   std::ifstream fin(DIRECTORY+"day3");
+   auto claims = r::getlines(fin) | rv::transform(str2Claim);
+
+
+   static const int DIM=1000;
+   using Cloth = std::vector<int>;
+   
+   auto cover = [](Cloth &cloth, Claim c) -> Cloth & {
+      for(auto x=0; x<c.width; ++x)
+         for(auto y=0; y<c.height; ++y)
+            cloth[DIM*(c.left+x)+c.top+y]++;
+      return cloth;
+   };
+   
+   Cloth freshCloth(DIM*DIM);
+   freshCloth = r::accumulate(claims,freshCloth,cover);
+
+   cout << "Day 3 star 1: " << r::count_if(freshCloth,[](auto n){return n>1;}) << endl;
+}
+
 int main() {
-   day1star1();
-   day1star2();
-   day2star1();
-   day2star2();
+//   day1star1();
+//   day1star2();
+//   day2star1();
+//   day2star2();
+   day3star1();
    return 0;
 }
