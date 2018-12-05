@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 using std::cout;
@@ -65,7 +66,7 @@ auto repeatedValues(Rng input) {
    return repeatedValuesHelper( r::any_view<int>(rv::empty<int>()), r::any_view<int>(input));
 }
 
-void day1star2a() {
+void day1star2() {
    std::ifstream fin(DIRECTORY+"day1");
    
    auto numbers = r::istream_range<int>(fin) | r::to_vector;
@@ -79,24 +80,32 @@ void day1star2a() {
    cout << "Day 1 star 2: " << *repeats.begin() << endl;
 }
 
-void day1star2b() {
-   std::ifstream fin(DIRECTORY+"day1");
+
+
+void day2star1() {
+   auto hasRep2Rep3 = [](std::string_view s) {
+      std::unordered_map<char,int> times;
+      for(auto c:s)
+         times[c]++;
+      auto twos = r::count_if(times,[](auto p){return p.second==2;});
+      auto threes = r::count_if(times,[](auto p){return p.second==3;}); //Not very DRY
+//    return std::make_pair(times | r::count(2,&pair<int,int>::second)>0,r::count_if(times,3,second)>0);
+      return std::make_pair(twos>0?1:0,threes>0?1:0);
+   };
    
-   auto numbers = r::istream_range<int>(fin) | r::to_vector;
-   
-   std::unordered_set<int> seen;
-   auto frequencies = rv::all(numbers)
-      | rv::cycle
-      | rv::partial_sum;
-   
-   cout << "Day 1 star 2: " << (repeatedValues(frequencies) | ranges::view::take(1)) << endl;
+   std::ifstream fin(DIRECTORY+"day2");
+   auto t = r::accumulate(r::istream_range<string>(fin) | rv::transform(hasRep2Rep3),
+                   std::make_pair(0,0),
+                   [](auto p, auto q) {
+                      return std::make_pair(p.first+q.first,p.second+q.second);
+                   });
+   cout << "Day 2 star 1: " << t.first * t.second << endl;
 }
 
+
 int main() {
-   day1star1();
-   day1star2b();
-//   static int const ints[] = {1,2,3,1,2,5,6,3,4,5,6,7,8,9};
-//   auto intsRange = r::any_view<int>(ints);
-//   cout << repeatedValues(intsRange) << "\n";
+//   day1star1();
+//   day1star2();
+   day2star1();
    return 0;
 }
