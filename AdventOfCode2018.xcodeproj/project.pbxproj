@@ -23,6 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		491E48C521B8A212009EF091 /* day4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day4; sourceTree = "<group>"; };
 		4953BF9B21B646A400DA16E6 /* AdventOfCode2018 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AdventOfCode2018; sourceTree = BUILT_PRODUCTS_DIR; };
 		4953BF9E21B646A400DA16E6 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4953BFA521B6FCE200DA16E6 /* day1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day1; sourceTree = "<group>"; };
@@ -49,6 +50,7 @@
 				4953BFA521B6FCE200DA16E6 /* day1 */,
 				49F8428C21B78F9D004CB5FC /* day2 */,
 				49F8428D21B836B7004CB5FC /* day3 */,
+				491E48C521B8A212009EF091 /* day4 */,
 			);
 			sourceTree = "<group>";
 		};
