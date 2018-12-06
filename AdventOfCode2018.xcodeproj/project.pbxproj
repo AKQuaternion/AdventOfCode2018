@@ -27,6 +27,7 @@
 		491E48C521B8A212009EF091 /* day4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day4; sourceTree = "<group>"; };
 		491E48C621B8A4A3009EF091 /* oldDays.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = oldDays.cpp; sourceTree = "<group>"; };
 		491E48C721B8A4A3009EF091 /* oldDays.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oldDays.hpp; sourceTree = "<group>"; };
+		491E48C921B8AA09009EF091 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		4953BF9B21B646A400DA16E6 /* AdventOfCode2018 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AdventOfCode2018; sourceTree = BUILT_PRODUCTS_DIR; };
 		4953BF9E21B646A400DA16E6 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4953BFA521B6FCE200DA16E6 /* day1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day1; sourceTree = "<group>"; };
@@ -71,6 +72,7 @@
 				4953BF9E21B646A400DA16E6 /* main.cpp */,
 				491E48C621B8A4A3009EF091 /* oldDays.cpp */,
 				491E48C721B8A4A3009EF091 /* oldDays.hpp */,
+				491E48C921B8AA09009EF091 /* README.md */,
 			);
 			path = AdventOfCode2018;
 			sourceTree = "<group>";
