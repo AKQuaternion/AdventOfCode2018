@@ -19,13 +19,14 @@
 using std::cout;
 using std::endl;
 using std::string;
-#include <range/v3/action/sort.hpp>
+
 #include <range/v3/algorithm/count_if.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/getlines.hpp>
 #include <range/v3/istream_range.hpp>
 #include <range/v3/view_interface.hpp>
 #include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/to_container.hpp>
 #include <range/v3/view/cartesian_product.hpp>
 #include <range/v3/view/cycle.hpp>
 #include <range/v3/view/filter.hpp>
@@ -35,6 +36,20 @@ using std::string;
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
 #include <range/v3/view/zip_with.hpp>
+#include <range/v3/utility/concepts.hpp>
+#include <range/v3/range_concepts.hpp>
+#include <range/v3/utility/iterator_concepts.hpp>
+#include <range/v3/utility/iterator_traits.hpp>
+#include <range/v3/range_traits.hpp>
+
+template <typename Rng,CONCEPT_REQUIRES_(!ranges::BoundedRange<Rng>())>
+auto back(Rng &&r) -> ranges::value_type_t<ranges::iterator_t<Rng>> {
+   ranges::value_type_t<ranges::iterator_t<Rng>> ret{};
+   for(auto && v:r)
+      ret=std::move(v);
+      return ret;
+}
+
 namespace r=ranges;
 namespace rv=r::view;
 
