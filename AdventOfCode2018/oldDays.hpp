@@ -11,13 +11,13 @@
 
 #include <string>
 
+extern const std::string DIRECTORY;
 
 void day1star1();
 void day1star2();
 void day2star1();
 void day2star2();
 void day3stars();
-
-extern const std::string DIRECTORY;
-
+void day4stars();
+void day5stars();
 #endif /* oldDays_hpp */
