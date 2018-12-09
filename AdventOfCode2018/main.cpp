@@ -57,8 +57,6 @@ void day4star1() {
       int guard,sleep,wake;
    };
    
-   for (auto i : records) cout << i << endl;
-   
    auto naps = records
          | rv::transform([](const string &s){return Record(s);})
          | rv::for_each([](const auto &rec) -> r::any_view<Nap> {
@@ -76,9 +74,6 @@ void day4star1() {
             sleep = -1;
             return r::yield(n);
          });
-   
-   for(auto n:naps) cout << n.guard << " " << n.sleep << " " << n.wake << endl;
-   cout << endl;
 
    auto sleep = [](auto & st, const Nap& n) ->std::unordered_map<int,int>&{
       st[n.guard] += n.wake-n.sleep;
@@ -89,31 +84,42 @@ void day4star1() {
 
    sleepTimes = r::accumulate(naps,sleepTimes,sleep);
    
-//   cout << sleepTimes.size() << endl;
-   
-   for(auto i : sleepTimes) cout << i.first << " " << i.second << endl;
-   
    auto bestGuard = r::max_element(sleepTimes,std::less<>(),&std::pair<const int,int>::second)->first;
-
-   cout << bestGuard << endl;
    
-   auto record = [bestGuard](auto & v, const Nap&n) -> std::vector<int> & {
-      if (n.guard != bestGuard)
+   struct GuardMinuteNaps {
+      int guard, minute, naps;
+   };
+   
+   auto guardNapAccumulator = [naps](int guard) {
+      auto record = [guard](auto & v, const Nap&n) -> std::vector<int> & {
+         if (n.guard != guard)
+            return v;
+         for (int ii=n.sleep; ii<n.wake;++ii)
+            v[ii]++;
          return v;
-      cout << n.guard << " " << n.sleep << " " << n.wake << endl;
-      for (int ii=n.sleep; ii<n.wake;++ii)
-         v[ii]++;
-      return v;
+      };
+      return record;
+   };
+   
+   auto guardHighestMinuteNaps = [&](int guard) {
+      std::vector<int> minutes(60);
+      minutes = r::accumulate(naps,minutes,guardNapAccumulator(guard));
+      auto bestMinute = r::max_element(minutes);
+      return GuardMinuteNaps{guard,int(bestMinute-minutes.begin()),*bestMinute};
    };
 
-   std::vector<int> minutes(60);
-   minutes = r::accumulate(naps,minutes,record);
-   auto bestMinute = r::max_element(minutes)-minutes.begin();
+   cout << "Day 4 star 1: "
+      << bestGuard*guardHighestMinuteNaps(bestGuard).minute << endl;
    
-   for(auto i:minutes) cout << i << endl;
-   cout << "minute: " << bestMinute << endl;
-
-   cout << bestGuard*bestMinute << endl;
+   auto guardsNapTimes = sleepTimes
+            | rv::transform([](const auto & p){return p.first;})
+            | rv::transform(guardHighestMinuteNaps);
+   
+   auto mostnap = *r::max_element(guardsNapTimes ,
+                       std::less<>(),
+                       &GuardMinuteNaps::naps);
+   
+   cout << "Day 4 star 2: " << mostnap.guard * mostnap.minute << endl;
 }
 
 int main() {
