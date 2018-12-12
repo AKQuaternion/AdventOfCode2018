@@ -30,6 +30,7 @@
 		491E48C921B8AA09009EF091 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		49391B1221BDC668001DE4C9 /* day5 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day5; sourceTree = "<group>"; };
 		49391B1321BDC67F001DE4C9 /* day6 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day6; sourceTree = "<group>"; };
+		49391B1421C0A495001DE4C9 /* day7 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day7; sourceTree = "<group>"; };
 		4953BF9B21B646A400DA16E6 /* AdventOfCode2018 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AdventOfCode2018; sourceTree = BUILT_PRODUCTS_DIR; };
 		4953BF9E21B646A400DA16E6 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4953BFA521B6FCE200DA16E6 /* day1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day1; sourceTree = "<group>"; };
@@ -59,6 +60,7 @@
 				491E48C521B8A212009EF091 /* day4 */,
 				49391B1221BDC668001DE4C9 /* day5 */,
 				49391B1321BDC67F001DE4C9 /* day6 */,
+				49391B1421C0A495001DE4C9 /* day7 */,
 			);
 			sourceTree = "<group>";
 		};
