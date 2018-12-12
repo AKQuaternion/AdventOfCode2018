@@ -467,3 +467,67 @@ void day7stars() {
    } while(!runningJobs.empty() || !readyJobs.empty());
    cout << "Day 7 star 2: " << curTime << endl;
 }
+
+void day8stars() {
+   class Tree {
+   public:
+      Tree(std::vector<int> data):_data(std::move(data))
+      {}
+      
+      int sumOfMeta() {
+         auto i=_data.cbegin();
+         auto sum = sumOfMetaHelper(i);
+         assert(i==_data.cend());
+         return sum;
+      }
+      
+      int value() {
+         auto i=_data.cbegin();
+         auto sum = valueHelper(i);
+         assert(i==_data.cend());
+         return sum;
+      }
+      
+   private:
+      int sumOfMetaHelper(std::vector<int>::const_iterator &i) {
+         auto numChildren = *i++;
+         auto numMeta = *i++;
+         auto sum = 0;
+         for(int c=0;c<numChildren;++c)
+            sum += sumOfMetaHelper(i);
+         for(int m=0;m<numMeta;++m)
+            sum += *i++;
+         return sum;
+      }
+      
+      int valueHelper(std::vector<int>::const_iterator &i) {
+         auto numChildren = *i++;
+         auto numMeta = *i++;
+         if (numChildren==0) {
+            auto sumOfMeta = 0;
+            for(int m=0;m<numMeta;++m)
+               sumOfMeta += *i++;
+            return sumOfMeta;
+         }
+         std::vector<int> childValues;
+         for(int c=0;c<numChildren;++c)
+            childValues.push_back(valueHelper(i));
+         auto sumValue = 0;
+         for(int m=0;m<numMeta;++m) {
+            auto meta = *i++ - 1;
+            if (meta < childValues.size())
+               sumValue += childValues[meta];
+         }
+         return sumValue;
+      }
+      std::vector<int> _data;
+   };
+   
+   std::ifstream fin(DIRECTORY+"day8");
+   
+   Tree t{r::istream_range<int>(fin)};
+   //   auto sin = std::istringstream{"2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2"};
+   //   Tree t{r::istream_range<int>{sin}};
+   cout << "Day 8 star 1: " << t.sumOfMeta() << "\n";
+   cout << "Day 8 star 2: " << t.value() << "\n";
+}
