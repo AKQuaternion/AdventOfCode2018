@@ -531,3 +531,67 @@ void day8stars() {
    cout << "Day 8 star 1: " << t.sumOfMeta() << "\n";
    cout << "Day 8 star 2: " << t.value() << "\n";
 }
+
+void day9stars() {
+   
+   class MarbleRing {
+      struct Node {
+         unsigned long long prev,next;
+      };
+   public:
+      MarbleRing(int players, int marbles):_scores(players),_marbles(marbles+1){
+         _marbles[0]={0,0};
+         auto curMarble = 0ull;
+         auto startMarble = 0ull;
+         for(int ii=1;ii<=marbles;++ii) {
+            if (ii%23 != 0) {
+               curMarble = _marbles[curMarble].next;
+               _marbles[ii].prev = curMarble;
+               _marbles[ii].next = _marbles[curMarble].next;
+               _marbles[_marbles[ii].next].prev = ii;
+               _marbles[_marbles[ii].prev].next = ii;
+               assert(_marbles[curMarble].next == ii);
+               curMarble = ii;
+            } else {
+               for(int p=0;p<7;++p)
+                  curMarble = _marbles[curMarble].prev;
+               if(curMarble==startMarble)
+                  startMarble = _marbles[curMarble].next;
+               _scores[ii%players] += ii+curMarble;
+               _marbles[_marbles[curMarble].next].prev = _marbles[curMarble].prev;
+               _marbles[_marbles[curMarble].prev].next = _marbles[curMarble].next;
+               curMarble = _marbles[curMarble].next;
+            }
+            //            cout << "(" << ii%players << ") " << startMarble << " ";
+            //            auto m = _marbles[startMarble].next;
+            //            while (m != startMarble) {
+            //               if (m==curMarble) cout << "+";
+            //               cout << m << " ";
+            //               m =_marbles[m].next;
+            //            }
+            //            cout << "\n";
+         }
+         //         cout << startMarble << ", ";
+         //         auto m = _marbles[startMarble].next;
+         //         while (m != startMarble) {
+         //            cout << m << ", ";
+         //            m =_marbles[m].next;
+         //         }
+         //         cout << "\n";
+      }
+      
+      const std::vector<unsigned long long> & scores() {return _scores;}
+      
+   private:
+      std::vector<Node> _marbles;
+      std::vector<unsigned long long> _scores;
+   };
+   
+   //   MarbleRing m(10,1618);
+   MarbleRing m(493,7186300);
+   //   MarbleRing m(9,50);
+   //   MarbleRing m(17,1104);
+   auto highScore = *r::max_element(m.scores());
+   cout << "Day 9 star 1: " << highScore << "\n";
+   
+}
