@@ -11,10 +11,12 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <queue>
 #include <set>
 #include <stack>
 #include <string>
 #include <sstream>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -26,6 +28,8 @@ using std::string;
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/algorithm/max_element.hpp>
 #include <range/v3/algorithm/min_element.hpp>
+#include <range/v3/algorithm/minmax_element.hpp>
+#include <range/v3/algorithm/reverse.hpp>
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/getlines.hpp>
 #include <range/v3/istream_range.hpp>
@@ -38,16 +42,31 @@ using std::string;
 #include <range/v3/utility/iterator_traits.hpp>
 #include <range/v3/view/any_view.hpp>
 #include <range/v3/view/cartesian_product.hpp>
+#include <range/v3/view/concat.hpp>
 #include <range/v3/view/cycle.hpp>
+#include <range/v3/view/drop.hpp>
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/for_each.hpp>
+#include <range/v3/view/iota.hpp>
 #include <range/v3/view/join.hpp>
 #include <range/v3/view/partial_sum.hpp>
+#include <range/v3/view/remove_if.hpp>
+#include <range/v3/view/repeat.hpp>
+#include <range/v3/view/single.hpp>
 #include <range/v3/view/take.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/zip.hpp>
 #include <range/v3/view/zip_with.hpp>
 #include <range/v3/view_interface.hpp>
+
+#define FWD(...) std::forward<decltype(__VA_ARGS__)>(__VA_ARGS__)
+
+#define LIFT(X) [](auto &&... args) \
+noexcept(noexcept(X(FWD(args)...)))  \
+-> decltype(X(FWD(args)...)) \
+{  \
+return X(FWD(args)...); \
+}
 
 template <typename Rng,CONCEPT_REQUIRES_(!ranges::BoundedRange<Rng>())>
 auto back(Rng &&r) -> ranges::value_type_t<ranges::iterator_t<Rng>> {
@@ -200,15 +219,15 @@ void day4stars() {
       static int sleep = -1;
       if (rec.guard != -1) {
          guard = rec.guard;
-         return r::yield_from(r::any_view<Nap>{});
+         return {};
       }
       if(sleep == -1) {
          sleep = rec.minute;
-         return r::yield_from(r::any_view<Nap>{});
+         return {};
       }
       Nap n{guard,sleep,rec.minute};
       sleep = -1;
-      return r::yield(n);
+      return rv::single(n);
    });
    
    auto sleep = [](auto & st, const Nap& n) ->std::unordered_map<int,int>&{
@@ -289,4 +308,162 @@ void day5stars() {
    auto shortest = *r::min_element(polymersRemovedSizes);
    
    cout << "Day 5 star 2: " << shortest << "\n";
+}
+
+void day6stars() {
+   
+   auto strToPair = [](const string &s) {
+      std::istringstream sin(s);
+      char _;
+      int x,y;
+      sin >> x >> _ >> y;
+      return std::make_tuple(x,y);
+   };
+   
+   std::ifstream fin(DIRECTORY+"day6");
+   const auto coords = r::getlines(fin) | rv::transform(strToPair) | r::to_vector;
+   
+   auto [minXi,maxXi] = r::minmax_element(coords,std::less<>(),LIFT(std::get<0>));
+   const auto minX = std::get<0>(*minXi);
+   const auto maxX = std::get<0>(*maxXi);
+   auto [minYi,maxYi] = r::minmax_element(coords,std::less<>(),[](auto t){return std::get<1>(t);});
+   const auto minY = std::get<1>(*minYi);
+   const auto maxY = std::get<1>(*maxYi);
+   //   cout << "x: " << minX << "," << maxX << "   y: " << minY << "," << maxY <<  endl;
+   
+   const auto locations = rv::cartesian_product(rv::ints(minX,maxX),rv::ints(minY,maxY));
+   const auto border = rv::concat(rv::cartesian_product(rv::ints(minX,maxX),rv::single(minY)),
+                                  rv::cartesian_product(rv::ints(minX,maxX),rv::single(maxY)),
+                                  rv::cartesian_product(rv::single(minX),rv::ints(minY+1,maxY-1)),
+                                  rv::cartesian_product(rv::single(maxX),rv::ints(minY+1,maxY-1)));
+   
+   auto dist = [](auto c,auto l) {
+      return abs(std::get<0>(c)-std::get<0>(l))+abs(std::get<1>(c)-std::get<1>(l));
+   };
+   
+   auto indexOfMinIfUnique = [coords,dist](auto l) {
+      auto checkNext = [l,&coords,dist] (auto && minp, const auto &c) -> auto & {
+         if(dist(c,l)<dist(coords[minp.first],l))
+            return minp = {&c-&coords.front(),true};
+         if(dist(c,l)==dist(coords[minp.first],l))
+            return minp = {minp.first,false};
+         return minp;
+      };
+      
+      auto [indexOfMin,unique] = r::accumulate(coords | rv::drop(1),std::make_pair(0,true),checkNext);
+      return rv::repeat_n(indexOfMin,unique?1:0);
+   };
+   
+   auto closestCoords = locations | rv::for_each(indexOfMinIfUnique);
+   
+   auto registerArea = [](auto &&areas, auto coordIndex) -> auto & {
+      areas[coordIndex]++;
+      return areas;
+   };
+   
+   auto areas = r::accumulate(closestCoords,std::vector<int>(coords.size()),registerArea);
+   
+   auto borderClosestCoords = border | rv::for_each(indexOfMinIfUnique);
+   
+   auto borderAreas = r::accumulate(borderClosestCoords,
+                                    std::vector<int>(coords.size()),
+                                    registerArea);
+   
+   auto finiteAreas = rv::zip(areas,borderAreas) |
+            rv::remove_if([](auto p){return p.second > 0;}) |
+            rv::transform([](auto p){return std::get<0>(p);});
+   
+   cout << "Day 6 star 1: " << *r::max_element(finiteAreas) << endl;
+   
+   auto sumOfDistances = [coords,dist](const auto &l){
+      return r::accumulate(rv::transform(coords,[dist,&l](const auto &c){return dist(c,l);}),0);
+   };
+   
+   auto goodLocations = r::count_if(locations | rv::transform(sumOfDistances),
+                                    [](auto d){return  d<10000;});
+   
+   cout << "Day 6 star 2: " << goodLocations << endl;
+}
+
+void day7stars() {
+
+   auto strToEdge = [](const string &s) {
+      std::istringstream sin(s);
+      string _s;
+      char from;
+      char to;
+      //   Step     X     must    be finished before step  P   can begin.
+      sin >> _s >> from >> _s  >> _s >> _s >> _s >> _s >> to;
+      return std::make_pair(from-'A',to-'A');
+   };
+   
+   std::ifstream fin(DIRECTORY+"day7");
+   const auto edges = r::getlines(fin) | rv::transform(strToEdge) | r::to_vector;
+   
+   std::vector<std::vector<int>> edgelists(26);
+   std::vector<int> inEdges(26);
+   
+   for (auto e:edges)
+      edgelists[e.first].push_back(e.second);
+   
+   for (auto e:edges)
+      ++inEdges[e.second];
+   
+   std::priority_queue<int,std::vector<int>,std::greater<>> jobs;
+   for(int ii=0;ii<26;++ii)
+      if(inEdges[ii]==0)
+         jobs.push(ii);
+   
+   std::string order;
+   
+   while(!jobs.empty()) {
+      auto me = jobs.top();
+      jobs.pop();
+      order += me+'A';
+      for(auto o:edgelists[me]) {
+         --inEdges[o];
+         if(inEdges[o]==0)
+            jobs.push(o);
+      }
+   }
+   
+   cout << "Day 7 star 1: " << order << endl;
+   
+   for (auto e:edges)
+      ++inEdges[e.second];
+   
+   std::priority_queue<int,std::vector<int>,std::greater<>> readyJobs;
+   for(int ii=0;ii<26;++ii)
+      if(inEdges[ii]==0)
+         readyJobs.push(ii);
+   
+   // (timeComplete, jobNum)
+   std::priority_queue<std::pair<int,int>,std::vector<std::pair<int,int>>,std::greater<>> runningJobs;
+   int busyWorkers=0;
+   
+   int curTime = 0;
+   do {
+      while(!readyJobs.empty() && busyWorkers < 4) {
+         auto newJob = readyJobs.top();
+         readyJobs.pop();
+         ++busyWorkers;
+         cout << "Time " << curTime << " assigned worker " << busyWorkers
+         << " to job " << char(newJob+'A') << " which will finish at " <<curTime+61+newJob<<endl;
+         runningJobs.push(std::make_pair(curTime+61+newJob,newJob));
+      }
+      auto completedJob = runningJobs.top();
+      runningJobs.pop();
+      --busyWorkers;
+      curTime = completedJob.first;
+      cout << "Time " << curTime << " Job " <<char('A'+completedJob.second) << " complete. Busy workers: "
+      << busyWorkers << endl;
+      for(auto o:edgelists[completedJob.second]) {
+         --inEdges[o];
+         if(inEdges[o]==0) {
+            readyJobs.push(o);
+            cout << "Job " << char(o+'A') << " is now ready.\n";
+         }
+      }
+   } while(!runningJobs.empty() || !readyJobs.empty());
+   cout << "Day 7 star 2: " << curTime << endl;
 }
