@@ -24,5 +24,5 @@ void day6stars();
 void day7stars();
 void day8stars();
 void day9stars();
-
+void day10stars();
 #endif /* oldDays_hpp */

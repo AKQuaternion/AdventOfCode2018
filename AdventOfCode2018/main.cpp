@@ -21,7 +21,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
-#include <range/v3/action/transform.hpp>
+
 #include <range/v3/getlines.hpp>
 #include <range/v3/to_container.hpp>
 //#include <range/v3/algorithm/sort.hpp>
@@ -52,55 +52,6 @@ using std::string;
 namespace r=ranges;
 namespace rv=r::view;
 
-void day10stars() {
-   struct Point {
-      int x, y, dx, dy; };
-   
-   auto stringToPoint = [](const string &s) {
-//position=<-20655, -20679> velocity=< 2,  2>
-      std::istringstream sin(s);
-      Point p;
-      char _;
-      sin.ignore(10);
-      sin >> p.x >> _ >> p.y;
-      sin.ignore(12);
-      sin >> p.dx >> _ >> p.dy;
-      return p;
-   };
-
-   std::ifstream fin(DIRECTORY+"day10");
-   auto points = r::getlines(fin) | rv::transform(stringToPoint) | r::to_vector;
-   auto prevMinY = r::min_element(points, std::less<>() ,&Point::y)->y;
-   auto count =0;
-   while(true) {
-      auto nextGen{points};
-      nextGen |= r::action::transform([](Point &p){p.x += p.dx; p.y += p.dy; return p;});
-      auto newMinY = r::min_element(nextGen, std::less<>() ,&Point::y)->y;
-
-      if (prevMinY > newMinY) {
-         auto minX = r::min_element(points, std::less<>(), &Point::x)->x;
-         auto maxX = r::max_element(points, std::less<>(), &Point::x)->x;
-         auto minY = r::min_element(points, std::less<>(), &Point::y)->y;
-         auto maxY = r::max_element(points, std::less<>(), &Point::y)->y;
-         cout << count << ": " << minX << "," << maxX << "   " << minY << "," << maxY << "\n";
-         auto plotPoints = [minX,minY](auto & plot, auto c) -> auto & {
-            plot[c.y-minY][c.x-minX] = '*';
-            return plot;
-         };
-         std::vector<std::vector<char>> plot(maxY-minY+1,std::vector<char>(maxX-minX+1,'.'));
-         plot = r::accumulate(points,plot,plotPoints);
-         for(const auto &row:plot) {
-            for(auto c:row)
-               cout << c;
-            cout << endl;
-         }
-         break;
-      }
-      prevMinY = newMinY;
-      points.swap(nextGen);
-      ++count;
-   }
-}
 
 
 int main() {
