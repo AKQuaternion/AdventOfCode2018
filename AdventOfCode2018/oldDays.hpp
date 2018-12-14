@@ -25,4 +25,20 @@ void day7stars();
 void day8stars();
 void day9stars();
 void day10stars();
+void day11stars();
+void day12stars();
+void day13stars();
+void day14stars();
+void day15stars();
+void day16stars();
+void day17stars();
+void day18stars();
+void day19stars();
+void day20stars();
+void day21stars();
+void day22stars();
+void day23stars();
+void day24stars();
+void day25stars();
+
 #endif /* oldDays_hpp */
