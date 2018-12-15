@@ -372,8 +372,8 @@ void day6stars() {
                                     registerArea);
    
    auto finiteAreas = rv::zip(areas,borderAreas) |
-            rv::remove_if([](auto p){return p.second > 0;}) |
-            rv::transform([](auto p){return std::get<0>(p);});
+   rv::remove_if([](auto p){return p.second > 0;}) |
+   rv::transform([](auto p){return std::get<0>(p);});
    
    cout << "Day 6 star 1: " << *r::max_element(finiteAreas) << endl;
    
@@ -388,7 +388,7 @@ void day6stars() {
 }
 
 void day7stars() {
-
+   
    auto strToEdge = [](const string &s) {
       std::istringstream sin(s);
       string _s;
@@ -712,3 +712,72 @@ void day11stars() {
    }
    cout << "Day 11 star 2: " << output <<"\n";
 }
+
+void day12stars() {
+   // This is still a mess and should be cleaned up
+   
+   std::ifstream fin(DIRECTORY+"day12");
+   string _;
+   string state;
+   fin >> _ >> _ >> state;
+   
+   fin.ignore();
+   fin.ignore();
+   
+   auto notes = r::getlines(fin) | r::to_vector;
+   //   r::sort(notes);
+   auto updateNumByPot = [](int &n, char p) {
+      n = (2*n+(p=='#'?1:0))%32;
+   };
+   
+   auto fivePotsToNum = [updateNumByPot](std::string_view s) {
+      int n=0;
+      for(auto c:s)
+         updateNumByPot(n,c);
+      return n;
+   };
+   
+   std::vector<char> rules(32);
+   for(const auto &s : notes) {
+      std::istringstream sin(s);
+      std::string rule;
+      char result;
+      sin >> rule >> _ >> result;
+      rules[fivePotsToNum(rule)]=result;
+   }
+   
+   //   const auto generations=50'000'000'000ull;
+   const auto generations=100ull;
+   //      const auto generations=2000000ull;
+   std::string pots(generations+state.size()+generations+2,'.');
+   r::copy(state,pots.begin()+generations);
+   cout << "Initial plants built." << endl;
+   auto sm2=0ll;
+   auto sm1=0ll;
+   for(auto g=0ll;g<generations;++g) {
+      auto num=0;
+      auto start = generations-g;
+      auto stop = start + 2*g + state.size()+3;
+      updateNumByPot(num,pots[start]);
+      updateNumByPot(num,pots[start+1]);
+      for(auto p=start+2ull;p<stop;++p) {
+         updateNumByPot(num,pots[p]);
+         pots[p-2] = rules[num];
+      }
+      auto sum=0ll;
+      for(auto p=0ll;p<pots.size();++p) {
+         if (pots[p]=='#')
+            sum += p-generations;
+      }
+      if(g==20-1)
+         cout << "Day 12 star 1: " << sum << "\n";
+      if(sum-sm1==sm1-sm2) {
+         cout << "Day 12 star 2: " << sum+(50000000000ll-g-1)*(sum-sm1) << "\n";
+         break;
+         }
+      sm2=sm1;
+      sm1=sum;
+   }
+}
+                                           
+                                           

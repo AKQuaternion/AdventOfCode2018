@@ -6,6 +6,7 @@
 //  Copyright © 2018 Chris Hartman. All rights reserved.
 //
 
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -20,7 +21,6 @@ using std::get;
 using std::cout;
 using std::endl;
 using std::string;
-
 
 #include <range/v3/getlines.hpp>
 #include <range/v3/to_container.hpp>
@@ -54,71 +54,124 @@ using std::string;
 namespace r=ranges;
 namespace rv=r::view;
 
-void day12stars() {
-   // This is still a mess and should be cleaned up
+namespace day13 {
+   std::vector<std::string> tracks;
+   std::vector<std::string> cartMap;
+   
+   class Cart {
+      friend bool operator<(const Cart &lhs, const Cart &rhs) {
+         return std::tie(lhs._y,lhs._x) < std::tie(rhs._y,rhs._x);
+      }
 
-   std::ifstream fin(DIRECTORY+"day12");
-   string _;
-   string state;
-   fin >> _ >> _ >> state;
-   
-   fin.ignore();
-   fin.ignore();
+   public:
+      Cart(int x,int y,int direction):_x(x),_y(y),_direction(direction)
+      {}
+      bool update() {
+         cout << "[" << _x << "," << _y << "] ";
+//         cout << cartMap[24].size() << cartMap[24];
+         cartMap[_y][_x] = ' ';
+         _x += directions[_direction].first;
+         _y += directions[_direction].second;
+//         cout << "[" << _x << "," << _y << "] " << endl;
+         if (cartMap[_y][_x] != ' ') {
+//            cout << int(cartMap[_y][_x]) << endl;
+            cout << "Day 13 star 1: " << _x << "," << _y << "\n";
+            return false;
+         }
+         switch (tracks[_y][_x]) {
+            case '/':
+               _direction ^= 1; ////swap U<->R and D<->L
+               break;
+            case '\\':
+               _direction = 3-_direction; //swap U<->L and D<->R
+               break;
+            case '+':
+               _direction = (_direction+turnChoices[_turnStatus])%4;
+               _turnStatus = (_turnStatus+1)%3;
+               break;
+            case ' ':
+               break;
+            default:
+               throw std::runtime_error("Cart::update() moved cart onto unknown track character");
+         }
+         cartMap[_y][_x] = symbols[_direction];
+         return true;
+      }
+   private:
+      int _x, _y;
+      int _direction;
+      int _turnStatus=0;
+      static constexpr std::pair<int,int> directions[4] = {{0,-1},{1,0},{0,1},{-1,0}};//URDL
+      static constexpr int turnChoices[3]={3,0,1};//Left, straight, right
+      static constexpr char symbols[4] = {'^','>','v','<'};
+   };
+}
 
-   auto notes = r::getlines(fin) | r::to_vector;
-//   r::sort(notes);
-   auto updateNumByPot = [](int &n, char p) {
-      n = (2*n+(p=='#'?1:0))%32;
-   };
+void day13stars() {
+   using namespace day13;
+   std::ifstream fin(DIRECTORY+"day13");
+   tracks = r::getlines(fin) | r::to_vector;
    
-   auto fivePotsToNum = [updateNumByPot](std::string_view s) {
-      int n=0;
-      for(auto c:s)
-         updateNumByPot(n,c);
-      return n;
-   };
-   
-   std::vector<char> rules(32);
-   for(const auto &s : notes) {
-      std::istringstream sin(s);
-      std::string rule;
-      char result;
-      sin >> rule >> _ >> result;
-      rules[fivePotsToNum(rule)]=result;
+   std::vector<Cart> carts;
+   for(int y=0;y<tracks.size();++y) {
+      cartMap.push_back({});
+      for(int x=0;x<tracks[y].size();++x) {
+         switch (tracks[y][x]) {
+            case '^':
+               carts.push_back({x,y,0});
+               cout << x << "," << y << endl;
+               cartMap.back().push_back('^');
+               tracks[y][x]=' ';
+               break;
+            case '>':
+               carts.push_back({x,y,1});
+               cout << x << "," << y << endl;
+               cartMap.back().push_back('>');
+               tracks[y][x]=' ';
+               break;
+            case 'v':
+               carts.push_back({x,y,2});
+               cout << x << "," << y << endl;
+               cartMap.back().push_back('v');
+               tracks[y][x]=' ';
+               break;
+            case '<':
+               carts.push_back({x,y,3});
+               cout << x << "," << y << endl;
+               cartMap.back().push_back('<');
+               tracks[y][x]=' ';
+               break;
+            case '/':
+            case '\\':
+            case '+':
+            case ' ':
+               cartMap.back().push_back(' ');
+               break;
+            case '-':
+            case '|':
+               cartMap.back().push_back(' ');
+               tracks[y][x]=' ';
+               break;
+            default:
+               throw std::runtime_error("day13stars: unknown symbol in track map ["+std::string(1,tracks[y][x])+"]");
+         }
+      }
    }
-   
-//   const auto generations=50'000'000'000ull;
-      const auto generations=100ull;
-//      const auto generations=2000000ull;
-   std::string pots(generations+state.size()+generations+2,'.');
-   r::copy(state,pots.begin()+generations);
-   cout << "Initial plants built." << endl;
-   auto sm2=0ll;
-   auto sm1=0ll;
-   for(auto g=0ll;g<generations;++g) {
-      auto num=0;
-      auto start = generations-g;
-      auto stop = start + 2*g + state.size()+3;
-      updateNumByPot(num,pots[start]);
-      updateNumByPot(num,pots[start+1]);
-      for(auto p=start+2ull;p<stop;++p) {
-         updateNumByPot(num,pots[p]);
-         pots[p-2] = rules[num];
+   for(int i=0;true;++i) {
+      std::sort(carts.begin(),carts.end());
+      for(auto &c:carts)
+         if(!c.update())
+            return;
+      cout << endl;
+      for(int y=0;y<25;++y) {
+         for(int x=0;x<tracks[y].size();++x)
+            if (cartMap[y][x]!=' ')
+               cout << cartMap[y][x];
+            else
+               cout << tracks[y][x];
+         cout << endl;
       }
-//      cout << pots.substr(generations,state.size()) << "\n";
-//      cout << pots << "\n";
-      auto sum=0ll;
-      for(auto p=0ll;p<pots.size();++p) {
-         if (pots[p]=='#')
-            sum += p-generations;
-      }
-      if(g==20-1)
-         cout << "Day 12 star 1: " << sum << "\n";
-      if(sum-sm1==sm1-sm2) {
-         cout << "Day 12 star 2: " << sum+(50'000'000'000ll-g-1)*(sum-sm1) << "\n";
-      }
-      sm2=sm1;
-      sm1=sum;
+      cout << "\n\n\n";
    }
 }
 
@@ -136,6 +189,7 @@ int main() {
 //   day9stars();
 //   day10stars();
 //   day11stars();
-   day12stars();
+//   day12stars();
+   day13stars();
    return 0;
 }
