@@ -55,6 +55,8 @@ namespace r=ranges;
 namespace rv=r::view;
 
 void day12stars() {
+   // This is still a mess and should be cleaned up
+
    std::ifstream fin(DIRECTORY+"day12");
    string _;
    string state;
@@ -86,33 +88,38 @@ void day12stars() {
    }
    
 //   const auto generations=50'000'000'000ull;
-   const auto generations=20ull;
+      const auto generations=100ull;
+//      const auto generations=2000000ull;
    std::string pots(generations+state.size()+generations+2,'.');
    r::copy(state,pots.begin()+generations);
    cout << "Initial plants built." << endl;
-   
+   auto sm2=0ll;
+   auto sm1=0ll;
    for(auto g=0ll;g<generations;++g) {
-//      if(g%(generations/100)==0)
-         cout << ".";
       auto num=0;
       auto start = generations-g;
-      auto stop = start + 2*g + state.size();
-      
+      auto stop = start + 2*g + state.size()+3;
       updateNumByPot(num,pots[start]);
       updateNumByPot(num,pots[start+1]);
       for(auto p=start+2ull;p<stop;++p) {
          updateNumByPot(num,pots[p]);
          pots[p-2] = rules[num];
       }
-      cout << pots << "\n";
+//      cout << pots.substr(generations,state.size()) << "\n";
+//      cout << pots << "\n";
+      auto sum=0ll;
+      for(auto p=0ll;p<pots.size();++p) {
+         if (pots[p]=='#')
+            sum += p-generations;
+      }
+      if(g==20-1)
+         cout << "Day 12 star 1: " << sum << "\n";
+      if(sum-sm1==sm1-sm2) {
+         cout << "Day 12 star 2: " << sum+(50'000'000'000ll-g-1)*(sum-sm1) << "\n";
+      }
+      sm2=sm1;
+      sm1=sum;
    }
-
-   auto sum=0ll;
-   for(auto p=0ull;p<pots.size();++p) {
-      if (pots[p]=='#')
-         sum += p-generations;
-   }
-   cout << "\nDay 12 star 2: " << sum << "\n";
 }
 
 int main() {
