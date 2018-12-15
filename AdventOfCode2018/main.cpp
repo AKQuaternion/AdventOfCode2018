@@ -85,27 +85,34 @@ void day12stars() {
       rules[fivePotsToNum(rule)]=result;
    }
    
-   const int generations=20;
-   std::string pots(2*generations+state.size()+2*generations+2,'.');
-   r::copy(state,pots.begin()+2*generations);
-
-   for(int g=0;g<generations;++g) {
+//   const auto generations=50'000'000'000ull;
+   const auto generations=20ull;
+   std::string pots(generations+state.size()+generations+2,'.');
+   r::copy(state,pots.begin()+generations);
+   cout << "Initial plants built." << endl;
+   
+   for(auto g=0ll;g<generations;++g) {
+//      if(g%(generations/100)==0)
+         cout << ".";
       auto num=0;
-      updateNumByPot(num,pots[0]);
-      updateNumByPot(num,pots[1]);
-      for(int p=2;p<pots.size();++p) {
+      auto start = generations-g;
+      auto stop = start + 2*g + state.size();
+      
+      updateNumByPot(num,pots[start]);
+      updateNumByPot(num,pots[start+1]);
+      for(auto p=start+2ull;p<stop;++p) {
          updateNumByPot(num,pots[p]);
          pots[p-2] = rules[num];
       }
       cout << pots << "\n";
    }
-   
-   auto sum=0;
-   for(int p=0;p<pots.size();++p) {
+
+   auto sum=0ll;
+   for(auto p=0ull;p<pots.size();++p) {
       if (pots[p]=='#')
-         sum += p-2*generations;
+         sum += p-generations;
    }
-   cout << "Day 12 star 1: " << sum << "\n";
+   cout << "\nDay 12 star 2: " << sum << "\n";
 }
 
 int main() {
