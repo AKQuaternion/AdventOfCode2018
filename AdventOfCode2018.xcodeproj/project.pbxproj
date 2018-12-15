@@ -26,6 +26,7 @@
 /* Begin PBXFileReference section */
 		49140CC821C477B3005C4A77 /* day12 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day12; sourceTree = "<group>"; };
 		49140CC921C48DBD005C4A77 /* day13 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day13; sourceTree = "<group>"; };
+		49140CCA21C5946D005C4A77 /* day13test */ = {isa = PBXFileReference; lastKnownFileType = text; path = day13test; sourceTree = "<group>"; };
 		491E48C521B8A212009EF091 /* day4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day4; sourceTree = "<group>"; };
 		491E48C621B8A4A3009EF091 /* oldDays.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = oldDays.cpp; sourceTree = "<group>"; };
 		491E48C721B8A4A3009EF091 /* oldDays.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oldDays.hpp; sourceTree = "<group>"; };
@@ -69,6 +70,7 @@
 				49391B1621C1BFC9001DE4C9 /* day10 */,
 				49140CC821C477B3005C4A77 /* day12 */,
 				49140CC921C48DBD005C4A77 /* day13 */,
+				49140CCA21C5946D005C4A77 /* day13test */,
 			);
 			sourceTree = "<group>";
 		};

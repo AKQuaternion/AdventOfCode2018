@@ -26,6 +26,7 @@ using std::string;
 #include <range/v3/to_container.hpp>
 #include <range/v3/algorithm/sort.hpp>
 #include <range/v3/algorithm/copy.hpp>
+#include <range/v3/action/remove_if.hpp>
 //#include <range/v3/algorithm/minmax_element.hpp>
 //#include <range/v3/algorithm/max_element.hpp>
 //#include <range/v3/algorithm/min_element.hpp>
@@ -57,6 +58,7 @@ namespace rv=r::view;
 namespace day13 {
    std::vector<std::string> tracks;
    std::vector<std::string> cartMap;
+   bool firstCollision = true;
    
    class Cart {
       friend bool operator<(const Cart &lhs, const Cart &rhs) {
@@ -66,17 +68,30 @@ namespace day13 {
    public:
       Cart(int x,int y,int direction):_x(x),_y(y),_direction(direction)
       {}
+      bool gone() const {
+         return _gone;
+      }
+      std::string positionStr() const {
+         return std::to_string(_x) + "," + std::to_string(_y);
+      }
+      void goneIfCrashed(const Cart &c) {
+         if(_x==c._x && _y == c._y) {
+            cartMap[_y][_x] = ' ';
+            _gone = true;
+         }
+      }
       bool update() {
-         cout << "[" << _x << "," << _y << "] ";
-//         cout << cartMap[24].size() << cartMap[24];
+         if (_gone)
+            return false;
          cartMap[_y][_x] = ' ';
          _x += directions[_direction].first;
          _y += directions[_direction].second;
-//         cout << "[" << _x << "," << _y << "] " << endl;
          if (cartMap[_y][_x] != ' ') {
-//            cout << int(cartMap[_y][_x]) << endl;
-            cout << "Day 13 star 1: " << _x << "," << _y << "\n";
-            return false;
+            if (firstCollision) {
+               cout << "Day 13 star 1: " << _x << "," << _y << "\n";
+               firstCollision = false;
+            }
+            return true;
          }
          switch (tracks[_y][_x]) {
             case '/':
@@ -95,12 +110,13 @@ namespace day13 {
                throw std::runtime_error("Cart::update() moved cart onto unknown track character");
          }
          cartMap[_y][_x] = symbols[_direction];
-         return true;
+         return false;
       }
    private:
       int _x, _y;
       int _direction;
       int _turnStatus=0;
+      bool _gone=false;
       static constexpr std::pair<int,int> directions[4] = {{0,-1},{1,0},{0,1},{-1,0}};//URDL
       static constexpr int turnChoices[3]={3,0,1};//Left, straight, right
       static constexpr char symbols[4] = {'^','>','v','<'};
@@ -119,25 +135,21 @@ void day13stars() {
          switch (tracks[y][x]) {
             case '^':
                carts.push_back({x,y,0});
-               cout << x << "," << y << endl;
                cartMap.back().push_back('^');
                tracks[y][x]=' ';
                break;
             case '>':
                carts.push_back({x,y,1});
-               cout << x << "," << y << endl;
                cartMap.back().push_back('>');
                tracks[y][x]=' ';
                break;
             case 'v':
                carts.push_back({x,y,2});
-               cout << x << "," << y << endl;
                cartMap.back().push_back('v');
                tracks[y][x]=' ';
                break;
             case '<':
                carts.push_back({x,y,3});
-               cout << x << "," << y << endl;
                cartMap.back().push_back('<');
                tracks[y][x]=' ';
                break;
@@ -157,21 +169,19 @@ void day13stars() {
          }
       }
    }
-   for(int i=0;true;++i) {
+   while(true) {
       std::sort(carts.begin(),carts.end());
       for(auto &c:carts)
-         if(!c.update())
-            return;
-      cout << endl;
-      for(int y=0;y<25;++y) {
-         for(int x=0;x<tracks[y].size();++x)
-            if (cartMap[y][x]!=' ')
-               cout << cartMap[y][x];
-            else
-               cout << tracks[y][x];
-         cout << endl;
+         if(c.update())
+            for(auto &c2:carts)
+               c2.goneIfCrashed(c);
+//      cout << carts.size() << " ";
+      carts |= r::action::remove_if([](auto &&c){return c.gone();});
+//      cout << carts.size() << "\n";
+      if (carts.size() == 1) {
+         cout << "Day 13 star 2: " << carts.front().positionStr() << "\n";
+         return;
       }
-      cout << "\n\n\n";
    }
 }
 
@@ -191,5 +201,6 @@ int main() {
 //   day11stars();
 //   day12stars();
    day13stars();
+//   day14stars();
    return 0;
 }
