@@ -26,6 +26,7 @@ using std::string;
 using std::get;
 
 #include <range/v3/action/transform.hpp>
+#include <range/v3/action/remove_if.hpp>
 #include <range/v3/algorithm/count_if.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/algorithm/max_element.hpp>
@@ -779,5 +780,154 @@ void day12stars() {
       sm1=sum;
    }
 }
-                                           
-                                           
+
+namespace day13 {
+   std::vector<std::string> tracks;
+   std::vector<std::string> cartMap;
+   bool firstCollision = true;
+   
+   class Cart {
+      friend bool operator<(const Cart &lhs, const Cart &rhs) {
+         return std::tie(lhs._y,lhs._x) < std::tie(rhs._y,rhs._x);
+      }
+
+   public:
+      Cart(int x,int y,int direction):_x(x),_y(y),_direction(direction)
+      {}
+      bool gone() const {
+         return _gone;
+      }
+      std::string positionStr() const {
+         return std::to_string(_x) + "," + std::to_string(_y);
+      }
+      void goneIfCrashed(const Cart &c) {
+         if(_x==c._x && _y == c._y) {
+            cartMap[_y][_x] = ' ';
+            _gone = true;
+         }
+      }
+      bool update() {
+         if (_gone)
+            return false;
+         cartMap[_y][_x] = ' ';
+         _x += directions[_direction].first;
+         _y += directions[_direction].second;
+         if (cartMap[_y][_x] != ' ') {
+            if (firstCollision) {
+               cout << "Day 13 star 1: " << _x << "," << _y << "\n";
+               firstCollision = false;
+            }
+            return true;
+         }
+         switch (tracks[_y][_x]) {
+            case '/':
+               _direction ^= 1; ////swap U<->R and D<->L
+               break;
+            case '\\':
+               _direction = 3-_direction; //swap U<->L and D<->R
+               break;
+            case '+':
+               _direction = (_direction+turnChoices[_turnStatus])%4;
+               _turnStatus = (_turnStatus+1)%3;
+               break;
+            case ' ':
+               break;
+            default:
+               throw std::runtime_error("Cart::update() moved cart onto unknown track character");
+         }
+         cartMap[_y][_x] = symbols[_direction];
+         return false;
+      }
+   private:
+      int _x, _y;
+      int _direction;
+      int _turnStatus=0;
+      bool _gone=false;
+      static constexpr std::pair<int,int> directions[4] = {{0,-1},{1,0},{0,1},{-1,0}};//URDL
+      static constexpr int turnChoices[3]={3,0,1};//Left, straight, right
+      static constexpr char symbols[4] = {'^','>','v','<'};
+   };
+}
+
+void day13stars() {
+   using namespace day13;
+   std::ifstream fin(DIRECTORY+"day13");
+   tracks = r::getlines(fin) | r::to_vector;
+   
+   std::vector<Cart> carts;
+   for(int y=0;y<tracks.size();++y) {
+      cartMap.push_back({});
+      for(int x=0;x<tracks[y].size();++x) {
+         switch (tracks[y][x]) {
+            case '^':
+               carts.push_back({x,y,0});
+               cartMap.back().push_back('^');
+               tracks[y][x]=' ';
+               break;
+            case '>':
+               carts.push_back({x,y,1});
+               cartMap.back().push_back('>');
+               tracks[y][x]=' ';
+               break;
+            case 'v':
+               carts.push_back({x,y,2});
+               cartMap.back().push_back('v');
+               tracks[y][x]=' ';
+               break;
+            case '<':
+               carts.push_back({x,y,3});
+               cartMap.back().push_back('<');
+               tracks[y][x]=' ';
+               break;
+            case '/':
+            case '\\':
+            case '+':
+            case ' ':
+               cartMap.back().push_back(' ');
+               break;
+            case '-':
+            case '|':
+               cartMap.back().push_back(' ');
+               tracks[y][x]=' ';
+               break;
+            default:
+               throw std::runtime_error("day13stars: unknown symbol in track map ["+std::string(1,tracks[y][x])+"]");
+         }
+      }
+   }
+   while(true) {
+      std::sort(carts.begin(),carts.end());
+      for(auto &c:carts)
+         if(c.update())
+            for(auto &c2:carts)
+               c2.goneIfCrashed(c);
+      //      cout << carts.size() << " ";
+      carts |= r::action::remove_if([](auto &&c){return c.gone();});
+      //      cout << carts.size() << "\n";
+      if (carts.size() == 1) {
+         cout << "Day 13 star 2: " << carts.front().positionStr() << "\n";
+         return;
+      }
+   }
+}
+
+void day14stars() {
+   using std::string;
+   using std::to_string;
+   
+   size_t elf1=0;
+   size_t elf2=1;
+   string recipies{"37"};
+   auto asNum = [](auto c){return c-'0';};
+   const int input=209231;
+   const string inputString = std::to_string(input);
+   auto tailSize = inputString.size()+1;
+   while(recipies.size() < input+10 ||
+         recipies.find(inputString,recipies.size()-tailSize) == string::npos) {
+      recipies.append(to_string(asNum(recipies[elf1])+asNum(recipies[elf2])));
+      elf1 = (elf1 + 1 + asNum(recipies[elf1]))%recipies.size();
+      elf2 = (elf2 + 1 + asNum(recipies[elf2]))%recipies.size();
+   }
+   cout << "Day 14 star 1: " << recipies.substr(input,10) << "\n";
+   cout << "Day 14 star 2: " << recipies.find(std::to_string(input)) << "\n";
+}
