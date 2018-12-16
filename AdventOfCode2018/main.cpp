@@ -22,167 +22,165 @@ using std::cout;
 using std::endl;
 using std::string;
 
-#include <range/v3/getlines.hpp>
-#include <range/v3/to_container.hpp>
-#include <range/v3/algorithm/sort.hpp>
-#include <range/v3/algorithm/copy.hpp>
-#include <range/v3/action/remove_if.hpp>
-//#include <range/v3/algorithm/minmax_element.hpp>
+//#include <range/v3/action/transform.hpp>
+//#include <range/v3/action/remove_if.hpp>
+//#include <range/v3/algorithm/count_if.hpp>
+//#include <range/v3/algorithm/find_if.hpp>
 //#include <range/v3/algorithm/max_element.hpp>
 //#include <range/v3/algorithm/min_element.hpp>
+//#include <range/v3/algorithm/minmax_element.hpp>
+//#include <range/v3/algorithm/reverse.hpp>
+//#include <range/v3/algorithm/sort.hpp>
+#include <range/v3/getlines.hpp>
+//#include <range/v3/istream_range.hpp>
 //#include <range/v3/numeric/accumulate.hpp>
-#include <range/v3/istream_range.hpp>
-#include <range/v3/view/all.hpp>
-//#include <range/v3/view/for_each.hpp>
+//#include <range/v3/range_concepts.hpp>
+//#include <range/v3/range_traits.hpp>
+//#include <range/v3/to_container.hpp>
+//#include <range/v3/utility/concepts.hpp>
+//#include <range/v3/utility/iterator_concepts.hpp>
+//#include <range/v3/utility/iterator_traits.hpp>
 //#include <range/v3/view/any_view.hpp>
 //#include <range/v3/view/cartesian_product.hpp>
-//#include <range/v3/view/iota.hpp>
 //#include <range/v3/view/concat.hpp>
+//#include <range/v3/view/cycle.hpp>
 //#include <range/v3/view/drop.hpp>
-//#include <range/v3/view/join.hpp>
 //#include <range/v3/view/filter.hpp>
+//#include <range/v3/view/for_each.hpp>
+//#include <range/v3/view/iota.hpp>
+//#include <range/v3/view/join.hpp>
+//#include <range/v3/view/partial_sum.hpp>
 //#include <range/v3/view/remove_if.hpp>
 //#include <range/v3/view/repeat.hpp>
 //#include <range/v3/view/single.hpp>
-//#include <range/v3/view/split.hpp>
 //#include <range/v3/view/take.hpp>
 //#include <range/v3/view/transform.hpp>
 //#include <range/v3/view/zip.hpp>
+//#include <range/v3/view/zip_with.hpp>
+//#include <range/v3/view_interface.hpp>
 
 #include "oldDays.hpp"
-#include <sstream>
 
 namespace r=ranges;
 namespace rv=r::view;
+/*
+ Addition:
 
-namespace day13 {
-   std::vector<std::string> tracks;
-   std::vector<std::string> cartMap;
-   bool firstCollision = true;
-   
-   class Cart {
-      friend bool operator<(const Cart &lhs, const Cart &rhs) {
-         return std::tie(lhs._y,lhs._x) < std::tie(rhs._y,rhs._x);
-      }
+addr (add register) stores into register C the result of adding register A and register B.
+addi (add immediate) stores into register C the result of adding register A and value B.
+Multiplication:
 
-   public:
-      Cart(int x,int y,int direction):_x(x),_y(y),_direction(direction)
-      {}
-      bool gone() const {
-         return _gone;
-      }
-      std::string positionStr() const {
-         return std::to_string(_x) + "," + std::to_string(_y);
-      }
-      void goneIfCrashed(const Cart &c) {
-         if(_x==c._x && _y == c._y) {
-            cartMap[_y][_x] = ' ';
-            _gone = true;
-         }
-      }
-      bool update() {
-         if (_gone)
-            return false;
-         cartMap[_y][_x] = ' ';
-         _x += directions[_direction].first;
-         _y += directions[_direction].second;
-         if (cartMap[_y][_x] != ' ') {
-            if (firstCollision) {
-               cout << "Day 13 star 1: " << _x << "," << _y << "\n";
-               firstCollision = false;
-            }
-            return true;
-         }
-         switch (tracks[_y][_x]) {
-            case '/':
-               _direction ^= 1; ////swap U<->R and D<->L
-               break;
-            case '\\':
-               _direction = 3-_direction; //swap U<->L and D<->R
-               break;
-            case '+':
-               _direction = (_direction+turnChoices[_turnStatus])%4;
-               _turnStatus = (_turnStatus+1)%3;
-               break;
-            case ' ':
-               break;
-            default:
-               throw std::runtime_error("Cart::update() moved cart onto unknown track character");
-         }
-         cartMap[_y][_x] = symbols[_direction];
-         return false;
-      }
-   private:
-      int _x, _y;
-      int _direction;
-      int _turnStatus=0;
-      bool _gone=false;
-      static constexpr std::pair<int,int> directions[4] = {{0,-1},{1,0},{0,1},{-1,0}};//URDL
-      static constexpr int turnChoices[3]={3,0,1};//Left, straight, right
-      static constexpr char symbols[4] = {'^','>','v','<'};
-   };
+mulr (multiply register) stores into register C the result of multiplying register A and register B.
+muli (multiply immediate) stores into register C the result of multiplying register A and value B.
+Bitwise AND:
+
+banr (bitwise AND register) stores into register C the result of the bitwise AND of register A and register B.
+bani (bitwise AND immediate) stores into register C the result of the bitwise AND of register A and value B.
+Bitwise OR:
+
+borr (bitwise OR register) stores into register C the result of the bitwise OR of register A and register B.
+bori (bitwise OR immediate) stores into register C the result of the bitwise OR of register A and value B.
+Assignment:
+
+setr (set register) copies the contents of register A into register C. (Input B is ignored.)
+seti (set immediate) stores value A into register C. (Input B is ignored.)
+Greater-than testing:
+
+gtir (greater-than immediate/register) sets register C to 1 if value A is greater than register B. Otherwise, register C is set to 0.
+gtri (greater-than register/immediate) sets register C to 1 if register A is greater than value B. Otherwise, register C is set to 0.
+gtrr (greater-than register/register) sets register C to 1 if register A is greater than register B. Otherwise, register C is set to 0.
+Equality testing:
+
+eqir (equal immediate/register) sets register C to 1 if value A is equal to register B. Otherwise, register C is set to 0.
+eqri (equal register/immediate) sets register C to 1 if register A is equal to value B. Otherwise, register C is set to 0.
+eqrr (equal register/register) sets register C to 1 if register A is equal to register B. Otherwise, register C is set to 0.
+*/
+std::vector<int> rr(4);
+
+void apply(const string &line){
+   std::istringstream sin(line);
+   std::string i;
+   int op1, op2, op3;
+   sin >> i >> op1 >> op2 >> op3;
+   if (i=="addr") {
+      rr[op3] = rr[op1]+rr[op2];
+   } else if (i=="addi") {
+      rr[op3] = rr[op1]+op2;
+   } else if (i=="mulr") {
+      rr[op3] = rr[op1]*rr[op2];
+   } else if (i=="muli") {
+      rr[op3] = rr[op1]*op2;
+   } else if (i=="banr") {
+      rr[op3] = rr[op1]&rr[op2];
+   } else if (i=="bani") {
+      rr[op3] = rr[op1]&op2;
+   } else if (i=="borr") {
+      rr[op3] = rr[op1]|rr[op2];
+   } else if (i=="bori") {
+      rr[op3] = rr[op1]|op2;
+   } else if (i=="setr") {
+      rr[op3] = rr[op1];
+   } else if (i=="seti") {
+      rr[op3] = op1;
+   } else if (i=="gtir") {
+      rr[op3] = op1>rr[op2];
+   } else if (i=="gtri") {
+      rr[op3] = rr[op1]>op2;
+   } else if (i=="gtrr") {
+      rr[op3] = rr[op1]+rr[op2];
+   } else if (i=="eqir") {
+      rr[op3] = op1==rr[op2];
+   } else if (i=="eqri") {
+      rr[op3] = rr[op1]==op2;
+   } else if (i=="eqrr") {
+      rr[op3] = rr[op1]==rr[op2];
+   } else throw 1;
 }
 
-void day13stars() {
-   using namespace day13;
-   std::ifstream fin(DIRECTORY+"day13");
-   tracks = r::getlines(fin) | r::to_vector;
+void day15stars() {
+   using std::string;
+   string opcodes[] = {"addr","addr","mulr","muli","banr","bani","borr","bori","setr","seti","gtir","gtri","gtrr","eqir","eqri","eqrr"};
    
-   std::vector<Cart> carts;
-   for(int y=0;y<tracks.size();++y) {
-      cartMap.push_back({});
-      for(int x=0;x<tracks[y].size();++x) {
-         switch (tracks[y][x]) {
-            case '^':
-               carts.push_back({x,y,0});
-               cartMap.back().push_back('^');
-               tracks[y][x]=' ';
-               break;
-            case '>':
-               carts.push_back({x,y,1});
-               cartMap.back().push_back('>');
-               tracks[y][x]=' ';
-               break;
-            case 'v':
-               carts.push_back({x,y,2});
-               cartMap.back().push_back('v');
-               tracks[y][x]=' ';
-               break;
-            case '<':
-               carts.push_back({x,y,3});
-               cartMap.back().push_back('<');
-               tracks[y][x]=' ';
-               break;
-            case '/':
-            case '\\':
-            case '+':
-            case ' ':
-               cartMap.back().push_back(' ');
-               break;
-            case '-':
-            case '|':
-               cartMap.back().push_back(' ');
-               tracks[y][x]=' ';
-               break;
-            default:
-               throw std::runtime_error("day13stars: unknown symbol in track map ["+std::string(1,tracks[y][x])+"]");
-         }
+   std::ifstream fin(DIRECTORY+"day15");
+   auto tests = r::getlines(fin) | r::to_vector;
+   
+   auto line=0ull;
+   auto b=0;
+   while (true) {
+      std::istringstream lin1(tests[line++]);
+      // Before: [0, 3, 1, 1]
+      string _;
+      char _c;
+      std::vector<int> tt(4);
+      lin1 >> _ >> _c >> tt[0] >> _c >> tt[1] >> _c >> tt[2] >>_c >> tt[3];
+      if (_ != "Before:")
+         break;
+      cout << tt[0] << tt[1] << tt[2] << tt[3] << endl;
+      std::istringstream lin2(tests[line++]);
+      int instr;
+      lin2 >> instr;
+      string rest;
+      std::getline(lin2,rest);
+      cout << opcodes[instr] + " " + rest << endl;
+
+      std::istringstream lin3(tests[line++]);
+      std::vector<int> rs(4);
+      lin3 >> _ >> _c >> rs[0] >> _c >> rs[1] >> _c >> rs[2] >>_c >> rs[3];
+      cout << rs[0] << rs[1] << rs[2] << rs[3] << endl;
+
+      int count=0;
+      for(int i=0;i<16;++i) {
+         rr = tt;
+         string exec = opcodes[i] + " " + rest;
+         apply(exec);
+         if(rr==rs)
+            count++;
       }
+      if(count>=3)
+         ++b;
+      ++line;
    }
-   while(true) {
-      std::sort(carts.begin(),carts.end());
-      for(auto &c:carts)
-         if(c.update())
-            for(auto &c2:carts)
-               c2.goneIfCrashed(c);
-//      cout << carts.size() << " ";
-      carts |= r::action::remove_if([](auto &&c){return c.gone();});
-//      cout << carts.size() << "\n";
-      if (carts.size() == 1) {
-         cout << "Day 13 star 2: " << carts.front().positionStr() << "\n";
-         return;
-      }
-   }
+   cout << b << endl;
 }
 
 int main() {
@@ -200,7 +198,8 @@ int main() {
 //   day10stars();
 //   day11stars();
 //   day12stars();
-   day13stars();
+//   day13stars();
 //   day14stars();
+   day15stars();
    return 0;
 }
