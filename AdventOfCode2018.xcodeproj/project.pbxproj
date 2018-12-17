@@ -29,6 +29,9 @@
 		49140CCA21C5946D005C4A77 /* day13test */ = {isa = PBXFileReference; lastKnownFileType = text; path = day13test; sourceTree = "<group>"; };
 		49140CCB21C602D2005C4A77 /* day14 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day14; sourceTree = "<group>"; };
 		49140CCF21C63089005C4A77 /* day16 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day16; sourceTree = "<group>"; };
+		49140CD021C8208B005C4A77 /* day17 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day17; sourceTree = "<group>"; };
+		49140CD221C82918005C4A77 /* day17test */ = {isa = PBXFileReference; lastKnownFileType = text; path = day17test; sourceTree = "<group>"; };
+		49140CD321C843C8005C4A77 /* day17test2 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day17test2; sourceTree = "<group>"; };
 		491E48C521B8A212009EF091 /* day4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day4; sourceTree = "<group>"; };
 		491E48C621B8A4A3009EF091 /* oldDays.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = oldDays.cpp; sourceTree = "<group>"; };
 		491E48C721B8A4A3009EF091 /* oldDays.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oldDays.hpp; sourceTree = "<group>"; };
@@ -56,11 +59,9 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		4953BF9221B646A400DA16E6 = {
+		49140CD121C8209B005C4A77 /* inputs */ = {
 			isa = PBXGroup;
 			children = (
-				4953BF9D21B646A400DA16E6 /* AdventOfCode2018 */,
-				4953BF9C21B646A400DA16E6 /* Products */,
 				4953BFA521B6FCE200DA16E6 /* day1 */,
 				49F8428C21B78F9D004CB5FC /* day2 */,
 				49F8428D21B836B7004CB5FC /* day3 */,
@@ -75,6 +76,19 @@
 				49140CCA21C5946D005C4A77 /* day13test */,
 				49140CCB21C602D2005C4A77 /* day14 */,
 				49140CCF21C63089005C4A77 /* day16 */,
+				49140CD021C8208B005C4A77 /* day17 */,
+				49140CD221C82918005C4A77 /* day17test */,
+				49140CD321C843C8005C4A77 /* day17test2 */,
+			);
+			name = inputs;
+			sourceTree = "<group>";
+		};
+		4953BF9221B646A400DA16E6 = {
+			isa = PBXGroup;
+			children = (
+				4953BF9D21B646A400DA16E6 /* AdventOfCode2018 */,
+				4953BF9C21B646A400DA16E6 /* Products */,
+				49140CD121C8209B005C4A77 /* inputs */,
 			);
 			sourceTree = "<group>";
 		};

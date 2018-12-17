@@ -109,9 +109,9 @@ public:
                _data[y-_minY][x-_minX] = '#';
 
 //      print();
-      auto start = _data.size()<100?6:500;
-      dropFrom({start-_minX,0});
-      print();
+      dropFrom({500-_minX,0});
+//      print();
+      cout << "Day 17 Star 1: " << _damp << ", Star 2: " << _wet << "\n";
    }
 
    char & at(Position p) {
@@ -121,6 +121,11 @@ public:
          exit(1);
       }
       return _data[p.y][p.x];
+   }
+   
+   void soak(Position p) {
+      at(p) = '|';
+      ++_damp;
    }
    
    void print(Position p={0,0}) {
@@ -138,18 +143,19 @@ public:
    // the following bool functions return true if water can escape
    
    bool dropFrom(Position p) {
+      if (at(p) == '|')
+         return true;
+      if (at(p) != '.')
+         return false;
       if(_data.size()<100) {
          cout << "drop\n";
          print(p);
       }
-      at(p) = '|';
+      soak(p);
       if(p.y == _maxY-_minY)
          return true;
-      if (at(p.below()) == '|')
-         return false;
-      if (at(p.below()) == '.')
-         if(dropFrom(p.below()))
-            return true;
+      if(dropFrom(p.below()))
+         return true;
       return fillFrom(p);
    }
    
@@ -158,40 +164,45 @@ public:
          cout << "fill\n";
          print(p);
       }
-      at(p) = '|';
-      auto leftFlood = spreadLeft(p);
-      auto rightFlood = spreadRight(p);
+      auto leftFlood = spreadLeft(p.left());
+      auto rightFlood = spreadRight(p.right());
+      if (!leftFlood && !rightFlood) {
+         for(auto t=p;at(t)=='|';t=t.left())
+            static_cast<void>(_wet++),at(t)='~';
+         for(auto t=p.right();at(t)=='|';t=t.right())
+            static_cast<void>(_wet++),at(t)='~';
+      }
       return(leftFlood || rightFlood);
    }
    
    bool spreadRight(Position p) {
+      if (at(p) == '|')
+         return true;
+      if (at(p) != '.')
+         return false;
       if(_data.size()<100) {
          cout << "right\n";
          print(p);
       }
-      p = p.right();
-      while (at(p)=='.' && at(p.below()) != '.') {
-         at(p) = '|';
-         p = p.right();
-      }
-      if(at(p.below()) == '.')
-         return dropFrom(p);
-      return at(p)=='|';
+      soak(p);
+      if(at(p.below())=='.' && dropFrom(p.below()))
+         return true;
+      return spreadRight(p.right());
    }
    
    bool spreadLeft(Position p) {
+      if (at(p) == '|')
+         return true;
+      if (at(p) != '.')
+         return false;
       if(_data.size()<100) {
          cout << "left\n";
          print(p);
       }
-      p = p.left();
-      while (at(p)!='#' && at(p.below()) != '.') {
-         at(p) = '|';
-         p = p.left();
-      }
-      if(at(p.below()) == '.')
-         return dropFrom(p);
-      return at(p)=='|';
+      soak(p);
+      if(at(p.below())=='.' && dropFrom(p.below()))
+         return true;
+      return spreadLeft(p.left());
    }
 
 private:
@@ -200,6 +211,8 @@ private:
    int _maxX;
    int _minY;
    int _maxY;
+   size_t _wet=0;
+   size_t _damp=0;
 };
    
 }
@@ -207,7 +220,7 @@ private:
 void day17stars() {
    using namespace day17;
    
-   std::ifstream fin(DIRECTORY+"day17test2");
+   std::ifstream fin(DIRECTORY+"day17");
    
    auto veins = r::getlines(fin) | rv::transform(lineToVein) | r::to_vector;
    
