@@ -1222,8 +1222,14 @@ void day17stars() {
          cout << "Day 17 Star 1: " << _damp << ", Star 2: " << _wet << "\n";
       }
       
-      char & at(Position p) {
+      const char at(Position p) {
          return _data[p.y][p.x];
+      }
+      
+      void make(Position p, char c) {
+         _data[p.y][p.x] = c;
+         if (c=='|') ++_damp;
+         else if (c=='~') ++_wet;
       }
       
       void print() {
@@ -1237,8 +1243,7 @@ void day17stars() {
             return true;
          if (at(p) != '.')
             return false;
-         ++_damp;
-         at(p) = '|';
+         make(p,'|');
          return p.y == _data.size()-1 || dropFrom(p.below()) || fillFrom(p);
       }
       
@@ -1248,10 +1253,8 @@ void day17stars() {
          if (!leftFlood && !rightFlood) {
             while (at(p.left()) == '|')
                p = p.left();
-            for ( ; at(p) == '|'; p=p.right()) {
-               _wet++;
-               at(p)='~';
-            }
+            for ( ; at(p) == '|'; p=p.right())
+               make(p,'~');
          }
          return leftFlood || rightFlood;
       }
@@ -1263,8 +1266,7 @@ void day17stars() {
             return true;
          if (at(p) != '.')
             return false;
-         ++_damp;
-         at(p) = '|';
+         make(p,'|');
          return dropFrom(p.below()) || spread(p,dir);
       }
       
