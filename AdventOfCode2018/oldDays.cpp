@@ -1185,7 +1185,7 @@ void day16stars() {
 
 void day17stars() {
    struct Vein {
-      int minx, maxx, miny, maxy;
+      int xLeft, xRight, yTop, yBottom;
       static Vein lineToVein (const std::string &line) {
          std::istringstream sin(line);
          char single,_;
@@ -1209,14 +1209,14 @@ void day17stars() {
    public:
       Scan(const std::vector<Vein>& veins) {
          // may need to allow water flow outside of leftmost and rightmost veins
-         auto _minX = r::min(veins, std::less<>(), &Vein::minx).minx-1;
-         auto _maxX = r::max(veins, std::less<>(), &Vein::maxx).maxx+1;
-         auto _minY = r::min(veins, std::less<>(), &Vein::miny).miny;
-         auto _maxY = r::max(veins, std::less<>(), &Vein::maxy).maxy;
+         auto _minX = r::min(veins, std::less<>(), &Vein::xLeft).xLeft-1;
+         auto _maxX = r::max(veins, std::less<>(), &Vein::xRight).xRight+1;
+         auto _minY = r::min(veins, std::less<>(), &Vein::yTop).yTop;
+         auto _maxY = r::max(veins, std::less<>(), &Vein::yBottom).yBottom;
          _data = std::vector<std::string>(_maxY-_minY+1,std::string(_maxX-_minX+1,'.'));
          for(const auto &v:veins)
-            for(int y=v.miny;y<=v.maxy;++y)
-               for(int x=v.minx;x<=v.maxx;++x)
+            for(int y=v.yTop;y<=v.yBottom;++y)
+               for(int x=v.xLeft;x<=v.xRight;++x)
                   _data[y-_minY][x-_minX] = '#';
          dropFrom({500-_minX,0});
          cout << "Day 17 Star 1: " << _damp << ", Star 2: " << _wet << "\n";
@@ -1237,23 +1237,20 @@ void day17stars() {
             return true;
          if (at(p) != '.')
             return false;
-         ++_damp; at(p) = '|';
-         if(p.y == _data.size()-1)
-            return true;
-         if(dropFrom(p.below()))
-            return true;
-         return fillFrom(p);
+         ++_damp;
+         at(p) = '|';
+         return p.y == _data.size()-1 || dropFrom(p.below()) || fillFrom(p);
       }
       
       bool fillFrom(Position p) {
          auto leftFlood = spread(p,&Position::left);
          auto rightFlood = spread(p,&Position::right);
          if (!leftFlood && !rightFlood) {
-            for(auto t=p;at(t)=='|';t=t.left()) {
-               _wet++; at(t)='~';
-            }
-            for(auto t=p.right();at(t)=='|';t=t.right()) {
-               _wet++; at(t)='~';
+            while (at(p.left()) == '|')
+               p = p.left();
+            for ( ; at(p) == '|'; p=p.right()) {
+               _wet++;
+               at(p)='~';
             }
          }
          return leftFlood || rightFlood;
@@ -1268,9 +1265,7 @@ void day17stars() {
             return false;
          ++_damp;
          at(p) = '|';
-         if(dropFrom(p.below()))
-            return true;
-         return spread(p,dir);
+         return dropFrom(p.below()) || spread(p,dir);
       }
       
    private:
