@@ -66,166 +66,111 @@ using std::string;
 namespace r=ranges;
 namespace rv=r::view;
 
-namespace day17 {
-using std::vector;
 
-struct Vein {
-   int minx, maxx, miny, maxy;
-};
 
-Vein lineToVein (const std::string &line) {
-   std::istringstream sin(line);
-   char single,_;
-   int s1,d1,d2;
-   sin >> single >> _ >> s1;
-   sin.ignore(4);
-   sin >> d1 >> _ >> _ >> d2;
-   if (single == 'x')
-      return {s1,s1,d1,d2};
-   else
-      return {d1,d2,s1,s1};
-}
 
-class Scan {
-   struct Position {
-      int x, y;
-      Position below() {return {x,y+1};}
-      Position above() {return {x,y-1};}
-      Position left() {return {x-1,y};}
-      Position right() {return {x+1,y};}
-   };
-   
-public:
-   template<typename Range>
-   Scan(Range veins) {
-      _minX = r::min(veins, std::less<>(), &Vein::minx).minx-1;
-      _maxX = r::max(veins, std::less<>(), &Vein::maxx).maxx;
-      _minY = r::min(veins, std::less<>(), &Vein::miny).miny;
-      _maxY = r::max(veins, std::less<>(), &Vein::maxy).maxy;
-      _data = vector<vector<char>>(_maxY-_minY+1,vector<char>(_maxX-_minX+1,'.'));
-      for(const auto &v:veins)
-         for(int y=v.miny;y<=v.maxy;++y)
-            for(int x=v.minx;x<=v.maxx;++x)
-               _data[y-_minY][x-_minX] = '#';
-
-//      print();
-      dropFrom({500-_minX,0});
-//      print();
-      cout << "Day 17 Star 1: " << _damp << ", Star 2: " << _wet << "\n";
-   }
-
-   char & at(Position p) {
-      if (p.y > _data.size() || p.x > _data[p.y].size()) {
-         cout << "Something's wrong\n";
-         print();
-         exit(1);
-      }
-      return _data[p.y][p.x];
-   }
-   
-   void soak(Position p) {
-      at(p) = '|';
-      ++_damp;
-   }
-   
-   void print(Position p={0,0}) {
-      auto c=at(p);
-      at(p) = '*';
-      for(auto &&row : _data) {
-         for(auto c:row)
-            cout << c;
-         cout << "\n";
-      }
-      at(p) = c;
-      cout << "\n";
-   }
-   
-   // the following bool functions return true if water can escape
-   
-   bool dropFrom(Position p) {
-      if (at(p) == '|')
-         return true;
-      if (at(p) != '.')
-         return false;
-      if(_data.size()<100) {
-         cout << "drop\n";
-         print(p);
-      }
-      soak(p);
-      if(p.y == _maxY-_minY)
-         return true;
-      if(dropFrom(p.below()))
-         return true;
-      return fillFrom(p);
-   }
-   
-   bool fillFrom(Position p) {
-      if(_data.size()<100) {
-         cout << "fill\n";
-         print(p);
-      }
-      auto leftFlood = spreadLeft(p.left());
-      auto rightFlood = spreadRight(p.right());
-      if (!leftFlood && !rightFlood) {
-         for(auto t=p;at(t)=='|';t=t.left())
-            static_cast<void>(_wet++),at(t)='~';
-         for(auto t=p.right();at(t)=='|';t=t.right())
-            static_cast<void>(_wet++),at(t)='~';
-      }
-      return(leftFlood || rightFlood);
-   }
-   
-   bool spreadRight(Position p) {
-      if (at(p) == '|')
-         return true;
-      if (at(p) != '.')
-         return false;
-      if(_data.size()<100) {
-         cout << "right\n";
-         print(p);
-      }
-      soak(p);
-      if(at(p.below())=='.' && dropFrom(p.below()))
-         return true;
-      return spreadRight(p.right());
-   }
-   
-   bool spreadLeft(Position p) {
-      if (at(p) == '|')
-         return true;
-      if (at(p) != '.')
-         return false;
-      if(_data.size()<100) {
-         cout << "left\n";
-         print(p);
-      }
-      soak(p);
-      if(at(p.below())=='.' && dropFrom(p.below()))
-         return true;
-      return spreadLeft(p.left());
-   }
-
-private:
-   vector<vector<char>> _data;
-   int _minX;
-   int _maxX;
-   int _minY;
-   int _maxY;
-   size_t _wet=0;
-   size_t _damp=0;
-};
-   
-}
 
 void day17stars() {
-   using namespace day17;
+   struct Vein {
+      int minx, maxx, miny, maxy;
+      static Vein lineToVein (const std::string &line) {
+         std::istringstream sin(line);
+         char single,_;
+         int s1,d1,d2;
+         sin >> single >> _ >> s1;
+         sin.ignore(4);
+         sin >> d1 >> _ >> _ >> d2;
+         return single=='x' ? Vein{s1,s1,d1,d2} : Vein{d1,d2,s1,s1};
+      }
+   };
    
    std::ifstream fin(DIRECTORY+"day17");
-   
-   auto veins = r::getlines(fin) | rv::transform(lineToVein) | r::to_vector;
+   auto veins = r::getlines(fin) | rv::transform(Vein::lineToVein) | r::to_vector;
+
+   class Scan {
+      struct Position {
+         int x, y;
+         Position below() {return {x,y+1};}
+         Position left() {return {x-1,y};}
+         Position right() {return {x+1,y};}
+      };
+      
+   public:
+      Scan(const std::vector<Vein>& veins) {
+         auto _minX = r::min(veins, std::less<>(), &Vein::minx).minx-1;
+         auto _maxX = r::max(veins, std::less<>(), &Vein::maxx).maxx+1;
+         // may need to allow water flow outside of leftmost and rightmost veins
+         auto _minY = r::min(veins, std::less<>(), &Vein::miny).miny;
+         auto _maxY = r::max(veins, std::less<>(), &Vein::maxy).maxy;
+         _data = std::vector<std::string>(_maxY-_minY+1,std::string(_maxX-_minX+1,'.'));
+         for(const auto &v:veins)
+            for(int y=v.miny;y<=v.maxy;++y)
+               for(int x=v.minx;x<=v.maxx;++x)
+                  _data[y-_minY][x-_minX] = '#';
+         dropFrom({500-_minX,0});
+         cout << "Day 17 Star 1: " << _damp << ", Star 2: " << _wet << "\n";
+      }
+      
+      char & at(Position p) {
+         return _data[p.y][p.x];
+      }
+      
+      void print() {
+         for(const auto &row : _data)
+            cout << row << "\n";
+      }
+      
+      // the following bool functions return true if water can escape
+      
+      bool dropFrom(Position p) {
+         if (at(p) == '|')
+            return true;
+         if (at(p) != '.')
+            return false;
+         ++_damp; at(p) = '|';
+         if(p.y == _data.size()-1)
+            return true;
+         if(dropFrom(p.below()))
+            return true;
+         return fillFrom(p);
+      }
+      
+      bool fillFrom(Position p) {
+         auto leftFlood = spread(p,&Position::left);
+         auto rightFlood = spread(p,&Position::right);
+         if (!leftFlood && !rightFlood) {
+            for(auto t=p;at(t)=='|';t=t.left()) {
+               _wet++; at(t)='~';
+            }
+            for(auto t=p.right();at(t)=='|';t=t.right()) {
+               _wet++; at(t)='~';
+            }
+            return false;
+         }
+         return true;
+      }
+      
+      // dir will be Position::left() or Position::right()
+      bool spread(Position p, Position (Position::*dir)()) {
+         p=(p.*dir)();
+         if (at(p) == '|')
+            return true;
+         if (at(p) != '.')
+            return false;
+         ++_damp;
+         at(p) = '|';
+         if(dropFrom(p.below()))
+            return true;
+         return spread(p,dir);
+      }
+      
+   private:
+      std::vector<std::string> _data;
+      size_t _wet=0;
+      size_t _damp=0;
+   };
    
    Scan s{veins};
-   s.print();
 }
 
 int main() {
