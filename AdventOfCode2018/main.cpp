@@ -98,7 +98,7 @@ class Scan {
 public:
    template<typename Range>
    Scan(Range veins) {
-      _minX = r::min(veins, std::less<>(), &Vein::minx).minx;
+      _minX = r::min(veins, std::less<>(), &Vein::minx).minx-1;
       _maxX = r::max(veins, std::less<>(), &Vein::maxx).maxx;
       _minY = r::min(veins, std::less<>(), &Vein::miny).miny;
       _maxY = r::max(veins, std::less<>(), &Vein::maxy).maxy;
@@ -108,10 +108,18 @@ public:
             for(int x=v.minx;x<=v.maxx;++x)
                _data[y-_minY][x-_minX] = '#';
 
-      dropFrom({6,0});
+//      print();
+      auto start = _data.size()<100?6:500;
+      dropFrom({start-_minX,0});
+      print();
    }
 
    char & at(Position p) {
+      if (p.y > _data.size() || p.x > _data[p.y].size()) {
+         cout << "Something's wrong\n";
+         print();
+         exit(1);
+      }
       return _data[p.y][p.x];
    }
    
@@ -130,55 +138,60 @@ public:
    // the following bool functions return true if water can escape
    
    bool dropFrom(Position p) {
-      print(p);
-      if (at(p.below()) == '.') {
-         at(p) = '|';
-         p = p.below();
-         if(p.y > _maxY)
-            return true;
+      if(_data.size()<100) {
+         cout << "drop\n";
+         print(p);
       }
-      fillFrom(p);
-      return false;
+      at(p) = '|';
+      if(p.y == _maxY-_minY)
+         return true;
+      if (at(p.below()) == '|')
+         return false;
+      if (at(p.below()) == '.')
+         if(dropFrom(p.below()))
+            return true;
+      return fillFrom(p);
    }
    
-   void fillFrom(Position p) {
-//      if (at(p) != '.')
-//         return;
+   bool fillFrom(Position p) {
+      if(_data.size()<100) {
+         cout << "fill\n";
+         print(p);
+      }
       at(p) = '|';
-      print(p);
-      if(!spreadLeft(p) && !spreadRight(p))
-         fillFrom(p.above());
+      auto leftFlood = spreadLeft(p);
+      auto rightFlood = spreadRight(p);
+      return(leftFlood || rightFlood);
    }
    
    bool spreadRight(Position p) {
-      print(p);
+      if(_data.size()<100) {
+         cout << "right\n";
+         print(p);
+      }
       p = p.right();
       while (at(p)=='.' && at(p.below()) != '.') {
          at(p) = '|';
          p = p.right();
       }
-      if(at(p.below()) == '.') {
-         at(p) = '|';
-         dropFrom(p);
-         return true;
-      }
-      return false;
+      if(at(p.below()) == '.')
+         return dropFrom(p);
+      return at(p)=='|';
    }
    
-
    bool spreadLeft(Position p) {
-      print(p);
+      if(_data.size()<100) {
+         cout << "left\n";
+         print(p);
+      }
       p = p.left();
-      while (at(p)=='.' && at(p.below()) != '.') {
+      while (at(p)!='#' && at(p.below()) != '.') {
          at(p) = '|';
          p = p.left();
       }
-      if(at(p.below()) == '.') {
-         at(p) = '|';
-         dropFrom(p);
-         return true;
-      }
-      return false;
+      if(at(p.below()) == '.')
+         return dropFrom(p);
+      return at(p)=='|';
    }
 
 private:
@@ -194,7 +207,7 @@ private:
 void day17stars() {
    using namespace day17;
    
-   std::ifstream fin(DIRECTORY+"day17test");
+   std::ifstream fin(DIRECTORY+"day17test2");
    
    auto veins = r::getlines(fin) | rv::transform(lineToVein) | r::to_vector;
    
