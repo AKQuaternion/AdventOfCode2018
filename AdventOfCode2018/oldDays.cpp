@@ -1247,9 +1247,19 @@ void day17stars() {
          return p.y == _data.size()-1 || dropFrom(p.below()) || fillFrom(p);
       }
       
+      // dir will be Position::left() or Position::right()
+      bool spread(Position p, Position (Position::*dir)()) {
+         if (at(p) == '|')
+            return true;
+         if (at(p) != '.')
+            return false;
+         make(p,'|');
+         return dropFrom(p.below()) || spread((p.*dir)(),dir);
+      }
+
       bool fillFrom(Position p) {
-         auto leftFlood = spread(p,&Position::left);
-         auto rightFlood = spread(p,&Position::right);
+         auto leftFlood = spread(p.left(),&Position::left);
+         auto rightFlood = spread(p.right(),&Position::right);
          if (!leftFlood && !rightFlood) {
             while (at(p.left()) == '|')
                p = p.left();
@@ -1258,18 +1268,7 @@ void day17stars() {
          }
          return leftFlood || rightFlood;
       }
-      
-      // dir will be Position::left() or Position::right()
-      bool spread(Position p, Position (Position::*dir)()) {
-         p=(p.*dir)();
-         if (at(p) == '|')
-            return true;
-         if (at(p) != '.')
-            return false;
-         make(p,'|');
-         return dropFrom(p.below()) || spread(p,dir);
-      }
-      
+
    private:
       std::vector<std::string> _data;
       size_t _wet=0;
