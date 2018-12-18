@@ -1277,3 +1277,107 @@ void day17stars() {
    
    Scan s{veins};
 }
+
+namespace day18 {
+   class Lumberyard {
+   public:
+      Lumberyard(std::vector<std::string> yard):_yard(std::move(yard))
+      {}
+      void run() {
+         std::map<int,unsigned long long> lastSeen;
+         auto gen=0;
+         auto timesAgo=-1;
+         int streakLength=0;
+         int target = -1;
+         while(true) {
+            update();
+            ++gen;
+            auto v = value();
+            
+            if (gen==10)
+               cout << "Day 18 star 1: " << v << "\n";
+            if (gen%timesAgo==target) {
+               cout << "Day 18 star 2: " << v << "\n";
+               return;
+            }
+            if (lastSeen.count(v)) {
+               if(gen-lastSeen[v] != timesAgo) {
+                  timesAgo = int(gen-lastSeen[v]);
+                  streakLength = 1;
+               } else {
+                  ++streakLength;
+                  if (streakLength == timesAgo)
+                     target = 1000000000ull%timesAgo;
+               }
+            }
+            else {
+               timesAgo = -1;
+               streakLength = 0;
+            }
+            
+            lastSeen[v] = gen;
+         }
+      }
+   private:
+      void update() {
+         auto yard2=_yard;
+         for(int y=0;y<yard2.size();++y)
+            for(int x=0;x<yard2[y].size();++x)
+               switch (yard2[y][x]) {
+                  case '.' :
+                     if (count(x,y,'|') >= 3)
+                        yard2[y][x] = '|';
+                     break;
+                  case '|' :
+                     if (count(x,y,'#') >= 3)
+                        yard2[y][x] = '#';
+                     break;
+                  case '#' :
+                     if (count(x,y,'#') < 1 || count(x,y,'|') < 1)
+                        yard2[y][x] = '.';
+                     break;
+               }
+         _yard.swap(yard2);
+      }
+      
+      int value() {
+         auto trees=0;
+         auto lumber=0;
+         for(int y=0;y<_yard.size();++y)
+            for(int x=0;x<_yard[y].size();++x) {
+               if (_yard[y][x]=='|')
+                  ++trees;
+               if (_yard[y][x]=='#')
+                  ++lumber;
+            }
+         return trees*lumber;
+      }
+      
+      char at(int x, int y) const {
+         if(y<0 || y>=_yard.size() || x<0 || x>=_yard[y].size())
+            return '\0';
+         return _yard[y][x];
+      }
+      
+      int count(int x, int y, char c) {
+         return  (at(x-1,y-1)==c)
+         + (at(x-1,y  )==c)
+         + (at(x-1,y+1)==c)
+         + (at(x  ,y-1)==c)
+         + (at(x  ,y+1)==c)
+         + (at(x+1,y-1)==c)
+         + (at(x+1,y  )==c)
+         + (at(x+1,y+1)==c);
+      }
+      std::vector<std::string> _yard;
+   };
+}
+
+void day18stars()
+{
+   using namespace day18;
+   std::ifstream fin(DIRECTORY+"day18");
+   std::vector<std::string> yard = r::getlines(fin);
+   Lumberyard l{yard};
+   l.run();
+}
