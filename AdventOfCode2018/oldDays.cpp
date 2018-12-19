@@ -28,6 +28,7 @@ using std::get;
 
 #include <range/v3/action/transform.hpp>
 #include <range/v3/action/remove_if.hpp>
+#include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/algorithm/count_if.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/algorithm/for_each.hpp>
@@ -1138,38 +1139,7 @@ void day16stars() {
    //   cout << tests[line)<<endl;
    rr = {0,0,0,0};
    for(;line<tests.size();++line) {
-      //      0 [4)
-      //      1 [3)
-      //      2 [7)
-      //      3 [8)
-      //      4 [1)
-      //      5 [15)
-      //      6 [11)
-      //      7 [0,10,12)
-      //      8 [6)
-      //      9 [14)
-      //      10 [5)
-      //      11 [0,12)
-      //      12 [13)
-      //      13 [2)
-      //      14 [9)
-      //      15 [0,10,12)
-      //      0 [4]
-      //      1 [3]
-      //      2 [7]
-      //      3 [8]
-      //      4 [1]
-      //      5 [15]
-      //      6 [11]
-      //      7 [0,10,12]
-      //      8 [6]
-      //      9 [14]
-      //      10 [5]
-      //      11 [0,12]
-      //      12 [13]
-      //      13 [2]
-      //      14 [9]
-      //      15 [0,10,12]
+
       std::istringstream lin2(tests[line]);
       int instr;
       lin2 >> instr;
