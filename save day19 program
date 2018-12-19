@@ -85,24 +85,24 @@ ip=5 [0 0 1 5 1 10551314] addr 1 3 3 [0 0 1 5 1 10551314]
 34 seti 0 9 0
 35 seti 0 4 3
 
-line00:    goto line17;      // rr3 = rr3+16;
+line00:    goto start;      // rr3 = rr3+16;
 line01:    rr2 = 1;
-line02:    rr4 = 1;
+*line02:    rr4 = 1;
 line03:    rr1 = rr2*rr4;
 line04:    rr1 = (rr1==rr5)  // rr1 = rr1==rr5)?1:0;
 line05:    goto line rr1+6;  // rr3 = rr1+rr3;
-line06:    goto line08;      // rr3 = rr3+1;
-line07:    rr0 += rr2;       // rr0 = rr2+rr0;
+*line06:    goto line08;      // rr3 = rr3+1;
+*line07:    rr0 += rr2;       // rr0 = rr2+rr0;
 line08:    ++rr4;            // rr4 = rr4+1;
 line09:    rr1 = (rr4>rr5);  // rr1 = rr4>rr5)?1:0;
 line10:    goto line rr1+11; // rr3 = rr3+rr1;
-line11:    goto line02;      // rr3 = 2;
-line12:    ++rr2;            // rr2 = rr2+1;
+*line11:    goto line02;      // rr3 = 2;
+*line12:    ++rr2;            // rr2 = rr2+1;
 line13:    rr1 = (rr2>rr5);  // rr1 = rr2>rr5)?1:0;
 line14:    goto line rr1+15; // rr3 = rr1+rr3;
-line15:    goto line01;      // rr3 = 1;
-line16:    exit;             // rr3 = rr3*rr3;
-line17:    rr5 += 2;         // rr5 = rr5+2;
+*line15:    goto line01;      // rr3 = 1;
+*line16:    exit;             // rr3 = rr3*rr3;
+start:     rr5 += 2;         // rr5 = rr5+2;
 line18:    rr5 *= rr5;       // rr5 = rr5*rr5;
 line19:    rr5 *= rr3;       // rr5 = rr3*rr5;
 line20:    rr5 *= 11;        // rr5 = rr5*11;
@@ -110,9 +110,9 @@ line21:    rr1 += 3;         // rr1 = rr1+3;
 line22:    rr1 *= 22;        // rr1 = rr1*rr3;
 line23:    rr1 += 12;        // rr1 = rr1+12;
 line24:    rr5 += rr1;       // rr5 = rr5+rr1;
-line25:    goto line 26+rr0; // rr3 = rr3+rr0;
-line26:    goto line0;       // rr3 = 0;
-line27:    rr1 = 27;         // rr1 = rr3;
+line25:    if (star1) go 0, else go 27; // goto line 26+rr0; // rr3 = rr3+rr0;
+*line26:    goto line0;       // rr3 = 0;
+*line27:    rr1 = 27;         // rr1 = rr3;
 line28:    rr1 *= 28;        // rr1 = rr1*rr3;
 line29:    rr1 += 29;        // rr1 = rr3+rr1;
 line30:    rr1 *= 30;        // rr1 = rr3*rr1;
