@@ -35,6 +35,13 @@
 		49140CD421C8AF84005C4A77 /* day15test1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test1; sourceTree = "<group>"; };
 		49140CD521C8B370005C4A77 /* day15test2 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test2; sourceTree = "<group>"; };
 		49140CD621C8B869005C4A77 /* day18 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day18; sourceTree = "<group>"; };
+		49140CD721C9A018005C4A77 /* day15test3 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test3; sourceTree = "<group>"; };
+		49140CD821C9A367005C4A77 /* day15test4 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test4; sourceTree = "<group>"; };
+		49140CD921C9A3B5005C4A77 /* day15test5 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test5; sourceTree = "<group>"; };
+		49140CDA21C9A3E7005C4A77 /* day15test6 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test6; sourceTree = "<group>"; };
+		49140CDB21C9A421005C4A77 /* day15test7 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test7; sourceTree = "<group>"; };
+		49140CDC21C9AA3F005C4A77 /* day15test8 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test8; sourceTree = "<group>"; };
+		49140CDD21C9B112005C4A77 /* day15test9 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day15test9; sourceTree = "<group>"; };
 		491E48C521B8A212009EF091 /* day4 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day4; sourceTree = "<group>"; };
 		491E48C621B8A4A3009EF091 /* oldDays.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = oldDays.cpp; sourceTree = "<group>"; };
 		491E48C721B8A4A3009EF091 /* oldDays.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = oldDays.hpp; sourceTree = "<group>"; };
@@ -80,6 +87,13 @@
 				49140CCB21C602D2005C4A77 /* day15 */,
 				49140CD421C8AF84005C4A77 /* day15test1 */,
 				49140CD521C8B370005C4A77 /* day15test2 */,
+				49140CD721C9A018005C4A77 /* day15test3 */,
+				49140CD821C9A367005C4A77 /* day15test4 */,
+				49140CD921C9A3B5005C4A77 /* day15test5 */,
+				49140CDA21C9A3E7005C4A77 /* day15test6 */,
+				49140CDB21C9A421005C4A77 /* day15test7 */,
+				49140CDC21C9AA3F005C4A77 /* day15test8 */,
+				49140CDD21C9B112005C4A77 /* day15test9 */,
 				49140CCF21C63089005C4A77 /* day16 */,
 				49140CD021C8208B005C4A77 /* day17 */,
 				49140CD221C82918005C4A77 /* day17test */,
