@@ -57,6 +57,8 @@
 		49567B9E21CAF01A00625E9F /* day19 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day19; sourceTree = "<group>"; };
 		49567B9F21CAF2A000625E9F /* day19test1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day19test1; sourceTree = "<group>"; };
 		49567BA021CAF5F700625E9F /* save day19 program */ = {isa = PBXFileReference; lastKnownFileType = text; path = "save day19 program"; sourceTree = "<group>"; };
+		49567BA221CB4EFB00625E9F /* day20test1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day20test1; sourceTree = "<group>"; };
+		49567BA321CB5A3A00625E9F /* day20.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day20.txt; sourceTree = "<group>"; };
 		49F8428C21B78F9D004CB5FC /* day2 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day2; sourceTree = "<group>"; };
 		49F8428D21B836B7004CB5FC /* day3 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -105,6 +107,8 @@
 				49567B9E21CAF01A00625E9F /* day19 */,
 				49567B9F21CAF2A000625E9F /* day19test1 */,
 				49567BA021CAF5F700625E9F /* save day19 program */,
+				49567BA221CB4EFB00625E9F /* day20test1 */,
+				49567BA321CB5A3A00625E9F /* day20.txt */,
 			);
 			name = inputs;
 			sourceTree = "<group>";

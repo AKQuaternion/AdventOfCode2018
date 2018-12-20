@@ -1582,5 +1582,89 @@ void day15stars() {
          return;
       }
    }
+}
+
+namespace day19 {
+   std::vector<int> rr(6);
+   auto ip = std::ref(rr[0]);
    
+   void apply(const string &line){
+      std::istringstream sin(line);
+      std::string i;
+      int op1, op2, op3;
+      sin >> i >> op1 >> op2 >> op3;
+      if (i=="addr") {
+         rr.at(op3) = rr.at(op1)+rr.at(op2);
+      } else if (i=="addi") {
+         rr.at(op3) = rr.at(op1)+op2;
+      } else if (i=="mulr") {
+         rr.at(op3) = rr.at(op1)*rr.at(op2);
+      } else if (i=="muli") {
+         rr.at(op3) = rr.at(op1)*op2;
+      } else if (i=="banr") {
+         rr.at(op3) = rr.at(op1)&rr.at(op2);
+      } else if (i=="bani") {
+         rr.at(op3) = rr.at(op1)&op2;
+      } else if (i=="borr") {
+         rr.at(op3) = rr.at(op1)|rr.at(op2);
+      } else if (i=="bori") {
+         rr.at(op3) = rr.at(op1)|op2;
+      } else if (i=="setr") {
+         rr.at(op3) = rr.at(op1);
+      } else if (i=="seti") {
+         rr.at(op3) = op1;
+      } else if (i=="gtir") {
+         rr.at(op3) = op1>rr.at(op2)?1:0;
+      } else if (i=="gtri") {
+         rr.at(op3) = rr.at(op1)>op2?1:0;
+      } else if (i=="gtrr") {
+         rr.at(op3) = rr.at(op1)>rr.at(op2)?1:0;
+      } else if (i=="eqir") {
+         rr.at(op3) = op1==rr.at(op2)?1:0;
+      } else if (i=="eqri") {
+         rr.at(op3) = rr.at(op1)==op2?1:0;
+      } else if (i=="eqrr") {
+         rr.at(op3) = rr.at(op1)==rr.at(op2)?1:0;
+      } else throw 1;
+   }
+}
+
+void day19stars() {
+   using namespace day19;
+   using std::string;
+   
+   string opcodes[] = {"addr","addi","mulr","muli","banr","bani","borr","bori","setr","seti","gtir","gtri","gtrr","eqir","eqri","eqrr"};
+   
+   std::ifstream fin(DIRECTORY+"day19");
+   auto lines = r::getlines(fin) | r::to_vector;
+   
+   string _;
+   int i;
+   std::istringstream sin(lines[0]);
+   sin >> _ >> i;
+   ip = std::ref(rr[i]);
+   
+   rr = {0,0,0,0,0,0};
+   while (ip+1 < lines.size()) {
+      //      cout << "ip=" << ip << " [" << rr[0] << " " << rr[1] << " " << rr[2] << " " << rr[3] << " " << rr[4] << " " << rr[5] << "] " << lines[ip+1];
+      apply(lines[ip+1]);
+      //      cout << " [" << rr[0] << " " << rr[1] << " " << rr[2] << " " << rr[3] << " " << rr[4] << " " << rr[5] << "]" << endl;
+      ++ip;
+   }
+   cout << "Day 19 star 1: " << rr.at(0) << endl;
+   
+   rr = {1,0,0,0,0,0};
+   int instructions=0;
+   while (instructions<100) {
+      apply(lines[ip+1]);
+      ++ip;
+      ++instructions;
+   }
+   
+   auto number = r::max(rr);
+   int sum=0;
+   for(int i=1;i<=number;++i)
+      if(number%i==0)
+         sum += i;
+   cout << "Day 19 star 2: " << sum << endl;
 }
