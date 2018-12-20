@@ -15,6 +15,8 @@
 #include <string>
 #include <set>
 #include <tuple>
+#include <stack>
+
 using std::get;
 #include <utility>
 #include <vector>
@@ -131,15 +133,13 @@ namespace day20 {
    void bfs(coord c,int len) {
       if (len>big)
          big=len;
-//      if(visited.count(c))
-//         return;
       std::queue<pair<coord,int>> q;
       q.push({c,len});
       while (!q.empty()) {
          auto [n,len] = q.front();
          q.pop();
          if (visited.count(n))
-            continue;
+            exit(1);//continue;
          if (len>=1000) ++longp;
          visited.insert(n);
          if (len>big)
@@ -148,8 +148,6 @@ namespace day20 {
             q.push({n2,len+1});
       }
    }
-
-
 }
 
 
@@ -170,7 +168,7 @@ void day20stars() {
 
    for(auto [loc,v]:doors) {
       cout << loc.first << "," << loc.second << " ---> ";
-      at(loc) = '.';
+      at(loc) = 'o';
       for(auto p:v) {
          at({(loc.first + p.first)/2,(loc.second+p.second)/2}) = '+';
          cout << "[" << p.first << "," << p.second << "] ";
@@ -211,5 +209,6 @@ int main() {
    //   day18stars();
    //   day19stars();
    day20stars();
+//   day20b();
    return 0;
 }
