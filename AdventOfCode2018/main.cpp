@@ -68,78 +68,78 @@ using std::endl;
 //namespace r=ranges;
 //namespace rv=r::view;
 
-namespace day20 {
-   using std::vector;
-   using std::pair;
-   using std::map;
-   using coord=pair<int,int>;
-   
-   map<pair<int,int>,vector<pair<int,int>>> doors;
-   
-   void connect(coord &a, const coord &b) {
-      doors[a].push_back(b);
-      doors[b].push_back(a);
-      a = b;
-   }
-   
-   void read(std::string_view chars, pair<int,int> s) {
-      int i=0;
-      auto orig=s;
-      auto & [x,y] = s;
-      while(true) {
-         switch(chars[i++]) {
-            case 'N':
-               connect(s,{x,y-1});
-               break;
-            case 'E':
-               connect(s,{x+1,y});
-               break;
-            case 'S':
-               connect(s,{x,y+1});
-               break;
-            case 'W':
-               connect(s,{x-1,y});
-               break;
-            case '(':
-               read(chars.substr(i),s);
-               break;
-            case ')':
-               return;
-            case '|':
-               s = orig;
-               break;
-            case '$':
-               return;
+   namespace day20 {
+      using std::vector;
+      using std::pair;
+      using std::map;
+      using coord=pair<int,int>;
+      
+      map<pair<int,int>,vector<pair<int,int>>> doors;
+      
+      void connect(coord &a, const coord &b) {
+         doors[a].push_back(b);
+         doors[b].push_back(a);
+         a = b;
+      }
+      
+      void read(std::string_view chars, int &i, pair<int,int> s) {
+         auto orig=s;
+         auto & [x,y] = s;
+         while(true) {
+            switch(chars[i++]) {
+               case 'N':
+                  connect(s,{x,y-1});
+                  break;
+               case 'E':
+                  connect(s,{x+1,y});
+                  break;
+               case 'S':
+                  connect(s,{x,y+1});
+                  break;
+               case 'W':
+                  connect(s,{x-1,y});
+                  break;
+               case '(':
+                  read(chars,i,s);
+                  break;
+               case ')':
+                  return;
+               case '|':
+                  s = orig;
+                  break;
+               case '$':
+                  return;
+            }
          }
       }
-   }
-
-   void day20stars() {
-      std::ifstream fin(DIRECTORY+"day20.txt");
-      std::string chars;
-      fin >> chars;
-      read(chars.substr(1),{0,0});
       
-      std::set<coord> visited;
-      std::queue<pair<coord,int>> q;
-      q.push({{0,0},0});
-      auto longest = 0;
-      auto numGT1000 = 0;
-      while (!q.empty()) {
-         auto [n,length] = q.front();
-         q.pop();
-         if (visited.count(n))
-            continue;
-         if (length>=1000) ++numGT1000;
-         visited.insert(n);
-         longest = std::max(length,longest);
-         for(auto n2:doors[n])
-            q.push({n2,length+1});
+      void day20stars() {
+         std::ifstream fin(DIRECTORY+"day20.txt");
+         std::string chars;
+         fin >> chars;
+         int i=1; //skip ^
+         read(chars,i,{0,0}); //read the map
+         
+         std::set<coord> visited;
+         std::queue<pair<coord,int>> q;
+         q.push({{0,0},0});
+         auto longest = 0;
+         auto numGT1000 = 0;
+         while (!q.empty()) { // do a bfs
+            auto [n,length] = q.front();
+            q.pop();
+            if (visited.count(n))
+               continue;
+            if (length>=1000) ++numGT1000;
+            visited.insert(n);
+            longest = std::max(length,longest);
+            for(auto n2:doors[n])
+               q.push({n2,length+1});
+         }
+         cout << "Day 20 star 1: " << longest << endl;
+         cout << "Day 20 star 2: " << numGT1000 << endl;
       }
-      cout << "Day 20 star 1: " << longest << endl;
-      cout << "Day 20 star 2: " << numGT1000 << endl;
    }
-}
 
 int main() {
    //   day1star1();
@@ -164,6 +164,6 @@ int main() {
    //   day18stars();
    //   day19stars();
    day20::day20stars();
-//   day20b();
+   //   day20b();
    return 0;
 }
