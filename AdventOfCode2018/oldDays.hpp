@@ -41,4 +41,22 @@ void day23stars();
 void day24stars();
 void day25stars();
 
+struct Point {//we blur distinction between point and vector
+   int x,y;
+
+   friend int dist(const Point &p1, const Point &p2){return p1.dist(p2);}
+   Point & operator+=(const Point &rhs) {x += rhs.x; y += rhs.y; return *this;}
+   Point operator+(const Point &rhs) const {return {x+rhs.x,y+rhs.y};}
+   bool operator==(const Point &rhs) const {return x==rhs.x && y==rhs.y;}
+   bool operator<(const Point &rhs) const {return x==rhs.x?y<rhs.y:x<rhs.x;}
+   std::string to_string() const {
+      return "["+std::to_string(x)+","+std::to_string(y)+"]";
+   }
+   int dist(const Point& p) const {return abs(x-p.x)+abs(y-p.y);}
+   friend std::ostream & operator<<(std::ostream &os, const Point &p) {
+      return os << p.to_string();
+   }
+};
+
+
 #endif /* oldDays_hpp */

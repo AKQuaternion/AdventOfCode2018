@@ -192,7 +192,8 @@ void day3stars() {
    Cloth freshCloth(DIM*DIM);
    freshCloth = r::accumulate(claims,freshCloth,cover);
    
-   cout << "Day 3 star 1: " << r::count_if(freshCloth,[](auto n){return n>1;}) << endl;
+   cout << "Day 3 star 1: "
+        << r::count_if(freshCloth,[](auto n){return n>1;}) << endl;
    auto intact = r::find_if(claims,[&freshCloth](const Claim &c){
       for(auto x=0; x<c.width; ++x)
          for(auto y=0; y<c.height; ++y)
@@ -609,55 +610,60 @@ void day9stars() {
 }
 
 void day10stars() {
-   struct Point {
-      int x, y, dx, dy; };
+   using std::vector;
+   struct Light {
+      Point pos, vel;
+      };
    
-   auto stringToPoint = [](const string &s) {
-      //position=<-20655, -20679> velocity=< 2,  2>
+   auto stringToLight = [](const string &s) {
       std::istringstream sin(s);
-      Point p;
+      Light p;
       char _;
       sin.ignore(10);
-      sin >> p.x >> _ >> p.y;
+      sin >> p.pos.x >> _ >> p.pos.y;
       sin.ignore(12);
-      sin >> p.dx >> _ >> p.dy;
+      sin >> p.vel.x >> _ >> p.vel.y;
       return p;
    };
    
    std::ifstream fin(DIRECTORY+"day10");
-   auto points = r::getlines(fin) | rv::transform(stringToPoint) | r::to_vector;
-   auto prevMinY = r::min_element(points, std::less<>() ,&Point::y)->y;
-   auto count =0;
-   while(true) {
-      auto nextGen{points};
-      nextGen |= r::action::transform([](Point &p){p.x += p.dx; p.y += p.dy; return p;});
-      auto newMinY = r::min_element(nextGen, std::less<>() ,&Point::y)->y;
-      
-      if (prevMinY > newMinY) {
-         auto minX = r::min(points, std::less<>(), &Point::x).x;
-         auto maxX = r::max(points, std::less<>(), &Point::x).x;
-         auto minY = r::min(points, std::less<>(), &Point::y).y;
-         auto maxY = r::max(points, std::less<>(), &Point::y).y;
-         cout << minX << maxX << endl;
-         auto plotPoints = [minX,minY](auto & plot, auto c) -> auto & {
-            plot[c.y-minY][c.x-minX] = '*';
-            return plot;
-         };
-         std::vector<std::vector<char>> plot(maxY-minY+1,std::vector<char>(maxX-minX+1,' '));
-         plot = r::accumulate(points,plot,plotPoints);
-         cout << "Day 10 star 1:\n";
-         for(const auto &row:plot) {
-            for(auto c:row)
-               cout << c;
-            cout << endl;
-         }
-         cout << "Day 10 star 2: " << count <<"\n";// << ": " << minX << "," << maxX << "   " << minY << "," << maxY << "\n";
+   auto lights = r::getlines(fin) | rv::transform(stringToLight) | r::to_vector;
+   auto prevMinY = r::min(lights | rv::transform([](auto &l){return l.pos.y;}));
+   auto count = 0;
+   auto nextGen = lights;
+   while (true) {
+      auto nextGen = lights
+                     | rv::transform([](Light p){p.pos += p.vel; return p;})
+                     | r::to_vector;
+      auto nextGenY = nextGen | rv::transform([](auto &l){return l.pos.y;});
+      auto nextMinY = r::min(nextGenY);
+      if (nextMinY < prevMinY)
          break;
-      }
-      prevMinY = newMinY;
-      points.swap(nextGen);
+      prevMinY = nextMinY;
+      lights = std::move(nextGen);
       ++count;
    }
+   auto [minX,maxX]
+      = r::minmax(
+            lights
+            | rv::transform(
+               [](const auto &l){return l.pos.x;}
+               )
+            );
+//   auto [minY,maxY] = r::minmax(lights | rv::transform([](const auto &l){return l.pos.y;}));
+
+#define TRANSFORM(x,y) rv::transform([](auto && x){return y;})
+//   auto [minY,maxY] = r::minmax(lights | TRANSFORM(l,l.pos.y));
+   auto [minY,maxY] = r::minmax(lights | rv::transform(&Light::pos) | rv::transform(&Point::y));
+   vector<std::string> plot(maxY-minY+1,string(maxX-minX+1,' '));
+   for(auto const &l:lights)
+      plot[l.pos.y-minY][l.pos.x-minX] = '*';
+
+   cout << "Day 10 star 1:\n";
+   for(const auto &row:plot)
+      cout << row << endl;
+
+   cout << "Day 10 star 2: " << count <<"\n";
 }
 
 void day11stars() {
@@ -1353,15 +1359,6 @@ void day18stars()
 }
 
 namespace day15 {
-   struct Point {//we blur distinction between point and vector
-      int x,y;
-      Point operator+(const Point &rhs) {return {x+rhs.x,y+rhs.y};}
-      bool operator==(const Point &rhs) {return x==rhs.x && y==rhs.y;}
-      std::string to_string() const {
-         return "["+std::to_string(x)+","+std::to_string(y)+"]";
-      }
-      int dist(const Point& p) const {return abs(x-p.x)+abs(y-p.y);}
-   };
    
    class Unit {
       friend class Cave;
@@ -1633,11 +1630,12 @@ void day19stars() {
    using namespace day19;
    using std::string;
    
-   string opcodes[] = {"addr","addi","mulr","muli","banr","bani","borr","bori","setr","seti","gtir","gtri","gtrr","eqir","eqri","eqrr"};
-   
    std::ifstream fin(DIRECTORY+"day19");
    auto lines = r::getlines(fin) | r::to_vector;
+
+   string opcodes[] = {"addr","addi","mulr","muli","banr","bani","borr","bori","setr","seti","gtir","gtri","gtrr","eqir","eqri","eqrr"};
    
+
    string _;
    int i;
    std::istringstream sin(lines[0]);
@@ -1667,4 +1665,289 @@ void day19stars() {
       if(number%i==0)
          sum += i;
    cout << "Day 19 star 2: " << sum << endl;
+}
+
+
+
+namespace day21 {
+   using std::string;
+   std::vector<int> rr(6);
+   auto ip = std::ref(rr[0]);
+   
+   void apply(const string &line){
+      std::istringstream sin(line);
+      std::string i;
+      int op1, op2, op3;
+      sin >> i >> op1 >> op2 >> op3;
+      if (i=="addr") {
+         rr.at(op3) = rr.at(op1)+rr.at(op2);
+      } else if (i=="addi") {
+         rr.at(op3) = rr.at(op1)+op2;
+      } else if (i=="mulr") {
+         rr.at(op3) = rr.at(op1)*rr.at(op2);
+      } else if (i=="muli") {
+         rr.at(op3) = rr.at(op1)*op2;
+      } else if (i=="banr") {
+         rr.at(op3) = rr.at(op1)&rr.at(op2);
+      } else if (i=="bani") {
+         rr.at(op3) = rr.at(op1)&op2;
+      } else if (i=="borr") {
+         rr.at(op3) = rr.at(op1)|rr.at(op2);
+      } else if (i=="bori") {
+         rr.at(op3) = rr.at(op1)|op2;
+      } else if (i=="setr") {
+         rr.at(op3) = rr.at(op1);
+      } else if (i=="seti") {
+         rr.at(op3) = op1;
+      } else if (i=="gtir") {
+         rr.at(op3) = op1>rr.at(op2)?1:0;
+      } else if (i=="gtri") {
+         rr.at(op3) = rr.at(op1)>op2?1:0;
+      } else if (i=="gtrr") {
+         rr.at(op3) = rr.at(op1)>rr.at(op2)?1:0;
+      } else if (i=="eqir") {
+         rr.at(op3) = op1==rr.at(op2)?1:0;
+      } else if (i=="eqri") {
+         rr.at(op3) = rr.at(op1)==op2?1:0;
+      } else if (i=="eqrr") {
+         rr.at(op3) = rr.at(op1)==rr.at(op2)?1:0;
+      } else throw 1;
+   }
+   
+   
+   void compile(const string &line){
+      std::istringstream sin(line);
+      std::string i;
+      int op1, op2, op3;
+      sin >> i >> op1 >> op2 >> op3;
+      if (i=="addr") {
+         cout << "rr" << op3 << " = rr" << op1  << " + rr" << op2 <<";\n";
+      } else if (i=="addi") {
+         cout << "rr" << op3 << " = rr" << op1<< "+" << op2 <<";\n";
+      } else if (i=="mulr") {
+         cout << "rr" << op3 << " = rr" << op1<< "* rr" << op2 <<";\n";
+      } else if (i=="muli") {
+         cout << "rr" << op3 << " = rr" << op1<< "* " << op2 <<";\n";
+      } else if (i=="banr") {
+         cout << "rr" << op3 << " = rr" << op1<< "& rr" << op2 <<";\n";
+      } else if (i=="bani") {
+         cout << "rr" << op3 << " = rr" << op1<< "&" << op2 <<";\n";
+      } else if (i=="borr") {
+         cout << "rr" << op3 << " = rr" << op1<< "| rr" << op2 <<";\n";
+      } else if (i=="bori") {
+         cout << "rr" << op3 << " = rr" << op1<< "|" << op2 <<";\n";
+      } else if (i=="setr") {
+         cout << "rr" << op3 << " = rr" << op1 <<";\n";
+      } else if (i=="seti") {
+         cout << "rr" << op3 << " = " << op1 <<";\n";
+      } else if (i=="gtir") {
+         cout << "rr" << op3 << " = " << op1<< ">rr" << op2 <<";\n";
+      } else if (i=="gtri") {
+         cout << "rr" << op3 << " = rr" << op1<< ">" << op2 <<";\n";
+      } else if (i=="gtrr") {
+         cout << "rr" << op3 << " = rr" << op1<< ">rr" << op2 <<";\n";
+      } else if (i=="eqir") {
+         cout << "rr" << op3 << " = " << op1<< "==rr" << op2 <<";\n";
+      } else if (i=="eqri") {
+         cout << "rr" << op3 << " = rr" << op1<< "==" << op2 <<";\n";
+      } else if (i=="eqrr") {
+         cout << "rr" << op3 << " = rr" << op1 << "==rr" << op2 <<";\n";
+      } else throw 1;
+   }
+   int maina() {
+
+      std::set<int> vals;
+      int rr0,rr1,rr2,rr3,rr4,rr5;
+      rr0=rr1=rr2=rr3=rr4=rr5=0;
+
+      rr0=1;
+      
+   line0: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = 123;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line1:  // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = rr3&456;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line2:  // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = rr3==72;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line3:  // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = rr3 + rr2;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      if(rr3) goto line5; else goto line4;
+   line4: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = 0;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      goto line1;
+   line5: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = 0;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line6: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr1 = rr3|65536;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line7: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = 10373714;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line8: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr5 = rr1&255;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line9: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = rr3 + rr5;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line10: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = rr3&16777215;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line11: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = rr3* 65899;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line12: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr3 = rr3&16777215;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line13: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr5 = 256>rr1;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line14: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = rr5 + rr2;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      if(rr5) goto line16; else goto line15;
+   line15: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = rr2+1;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      goto line17;
+   line16: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = 27;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      goto line28;
+   line17: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr5 = 0;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line18: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr4 = rr5+1;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line19: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr4 = rr4* 256;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line20: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr4 = rr4>rr1;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line21: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = rr4 + rr2;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      if(rr4) goto line23; else goto line22;
+   line22: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = rr2+1;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      goto line24;
+   line23: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = 25;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      goto line26;
+   line24: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr5 = rr5+1;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line25: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = 17;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      goto line18;
+   line26: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr1 = rr5;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+   line27: // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr2 = 7;
+      // sss cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      ++rr2;
+      goto line8;
+      //line28:   rr5 = rr3==rr0;
+      //line29:   rr2 = rr5 + rr2;
+      //line30:   rr2 = 5;
+   line28: //cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << " ] [";
+      rr5 = rr3==rr0;
+      //cout << "ip="<<rr2<< ": " << rr0 << " " << rr1 << " "<< rr2 << " "<< rr3 << " "<< rr4 << " "<< rr5 << endl;
+      cout << rr3 << endl;
+      if(vals.count(rr3)) {
+         cout << "Done!" << endl;
+         exit(1);
+      }
+      vals.insert(rr3);
+      goto line6;
+      
+   }}
+
+void day21stars() {
+   using namespace day21;
+   using std::string;
+   
+   std::ifstream fin(DIRECTORY+"day21");
+   auto lines = r::getlines(fin) | r::to_vector;
+   //      auto polymer = r::istream_range<char>(fin) | r::to_vector;
+   for(auto &l:lines)
+      cout << l << "\n";
+   
+   string opcodes[] = {"addr","addi","mulr","muli","banr","bani","borr","bori","setr","seti","gtir","gtri","gtrr","eqir","eqri","eqrr"};
+   
+   string _;
+   int i;
+   std::istringstream sin(lines[0]);
+   sin >> _ >> i;
+   ip = std::ref(rr[i]);
+   
+   rr = {0,0,0,0,0,0};
+   while (ip+1 < lines.size()) {
+      //      cout << "ip=" << ip << " [" << rr[0] << " " << rr[1] << " " << rr[2] << " " << rr[3] << " " << rr[4] << " " << rr[5] << "] " << lines[ip+1];
+      cout << "line" << ip << ":   "; compile(lines[ip+1]);
+      //      cout << " [" << rr[0] << " " << rr[1] << " " << rr[2] << " " << rr[3] << " " << rr[4] << " " << rr[5] << "]" << endl;
+      ++ip;
+   }
+   cout << "Day 21 star 1: " << rr.at(0) << endl;
+   
+   ip.get()=0;
+   rr = {1,0,0,0,0,0};
+   int instructions=0;
+
+   std::unordered_set<int> vals;
+   while (true) {
+      //         cout << "ip=" << ip << " [" << rr[0] << " " << rr[1] << " " << rr[2] << " " << rr[3] << " " << rr[4] << " " << rr[5] << "] " << lines[ip+1];
+      apply(lines[ip+1]);
+      //          cout << " [" << rr[0] << " " << rr[1] << " " << rr[2] << " " << rr[3] << " " << rr[4] << " " << rr[5] << "]" << endl;
+      if (ip==28) {
+         //         cout << std::bitset<32>(rr[1]) << " " << std::bitset<32>(rr[3]) << endl;
+         if(vals.count(rr[3])) {
+            cout << "Done!" << endl;
+            exit(1);
+         }
+         cout << rr[3] << " " << vals.size() << endl;
+         vals.insert(rr[3]);
+      }
+      ++ip;
+      ++instructions;
+   }
+   
+
 }

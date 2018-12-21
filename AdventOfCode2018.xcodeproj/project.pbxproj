@@ -59,6 +59,9 @@
 		49567BA021CAF5F700625E9F /* save day19 program */ = {isa = PBXFileReference; lastKnownFileType = text; path = "save day19 program"; sourceTree = "<group>"; };
 		49567BA221CB4EFB00625E9F /* day20test1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day20test1; sourceTree = "<group>"; };
 		49567BA321CB5A3A00625E9F /* day20.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day20.txt; sourceTree = "<group>"; };
+		49E357CE21CCA11F00711C7E /* day21 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day21; sourceTree = "<group>"; };
+		49E357CF21CCA12A00711C7E /* day21test1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day21test1; sourceTree = "<group>"; };
+		49E357D021CCAF9100711C7E /* saveday21program */ = {isa = PBXFileReference; lastKnownFileType = text; path = saveday21program; sourceTree = "<group>"; };
 		49F8428C21B78F9D004CB5FC /* day2 */ = {isa = PBXFileReference; lastKnownFileType = text; path = day2; sourceTree = "<group>"; };
 		49F8428D21B836B7004CB5FC /* day3 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = day3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -109,6 +112,9 @@
 				49567BA021CAF5F700625E9F /* save day19 program */,
 				49567BA221CB4EFB00625E9F /* day20test1 */,
 				49567BA321CB5A3A00625E9F /* day20.txt */,
+				49E357CE21CCA11F00711C7E /* day21 */,
+				49E357CF21CCA12A00711C7E /* day21test1 */,
+				49E357D021CCAF9100711C7E /* saveday21program */,
 			);
 			name = inputs;
 			sourceTree = "<group>";
