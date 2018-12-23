@@ -28,11 +28,13 @@ using std::endl;
 
 #include <range/v3/action/transform.hpp>
 #include <range/v3/action/remove_if.hpp>
+#include <range/v3/algorithm/count_if.hpp>
 //#include <range/v3/algorithm/any_of.hpp>
 //#include <range/v3/algorithm/find_if.hpp>
 //#include <range/v3/algorithm/max.hpp>
 //#include <range/v3/algorithm/min.hpp>
-//#include <range/v3/algorithm/max_element.hpp>
+#include <range/v3/algorithm/minmax.hpp>
+#include <range/v3/algorithm/max_element.hpp>
 //#include <range/v3/algorithm/min_element.hpp>
 //#include <range/v3/algorithm/minmax_element.hpp>
 //#include <range/v3/algorithm/reverse.hpp>
@@ -60,7 +62,7 @@ using std::endl;
 //#include <range/v3/view/repeat.hpp>
 //#include <range/v3/view/single.hpp>
 #include <range/v3/view/take.hpp>
-//#include <range/v3/view/transform.hpp>
+#include <range/v3/view/transform.hpp>
 //#include <range/v3/view/zip.hpp>
 //#include <range/v3/view/zip_with.hpp>
 //#include <range/v3/view_interface.hpp>
@@ -70,56 +72,223 @@ using std::endl;
 namespace r=ranges;
 namespace rv=r::view;
 
-void day20stars() {
-   using Pos=Point;
-   std::ifstream fin(DIRECTORY+"day20.txt");
-   std::string chars;
-   fin >> chars;
-   //   chars = "^(E|SSEENNW)S$";
-   int i=1; //skip ^
-   Pos curPos{0,0};
-   std::stack<Pos> v;
-   v.push(curPos);
-   std::map<char,Pos> dirs{{'N',{0,-1}},{'E',{1,0}},{'S',{0,1}},{'W',{-1,0}}};
-   std::map<Pos,std::set<Pos>> doors;
+
+namespace day22 {
+   using std::string;
+   using std::vector;
+   using std::ostream;
+
+   struct Loc {
+      int x, y, tool;
+      bool operator<(const Loc rhs) const {
+         return std::tie(x,y,tool) < std::tie(rhs.x, rhs.y, rhs.tool);
+      }
+      friend ostream & operator<<(ostream &os, const Loc &l) {
+         return os << "("<<l.x<<","<<l.y<<") tool: "<<l.tool;
+      }
+   };
    
-   for(char c=chars[i]; c != '$'; c=chars[++i]) { //read the regex
-      if (c=='(')
-         v.push(curPos);
-      else if (c==')') {
-         curPos=v.top();
-         v.pop();
-      } else if (c=='|')
-         curPos = v.top();
-      else {
-         auto nextPos = curPos+dirs[c];
-         if(doors[curPos].count(nextPos)) {
-            cout << "Seen before " << curPos << " -> " << nextPos << "\n";
+}
+
+void day22stars() {
+//depth: 11109
+//target: 9,731
+   using namespace day22;
+//
+//   const int maxx=10;
+//   const int maxy=10;
+//   const auto depth = 510;
+   const int maxx   = 9;
+   const int maxy   = 731;
+   const auto depth = 11109;
+   
+   vector<vector<int>> gi(4*maxy+1,vector<int>(6*maxx+1));
+   vector<vector<int>> el(gi);
+   vector<vector<int>> type(6*maxx+1,vector<int>(4*maxy+1));
+
+
+//   The region at 0,0 (the mouth of the cave) has a geologic index of 0.
+//   The region at the coordinates of the target has a geologic index of 0.
+//   If the region's Y coordinate is 0, the geologic index is its X coordinate times 16807.
+//   If the region's X coordinate is 0, the geologic index is its Y coordinate times 48271.
+//   Otherwise, the region's geologic index is the result of multiplying the erosion levels of the regions at X-1,Y and X,Y-1.}
+   unsigned long long sum=0;
+   for(auto y=0;y<gi.size();++y)
+      for(auto x = 0;x<gi[y].size();++x) {
+         if (x==0&&y==0) gi[y][x]=0;
+         else if (y==maxy && x == maxx) gi[y][x] = 0;
+         else if(y==0) gi[y][x] = x*16807%20183;
+         else if(x==0) gi[y][x] = y*48271%20183;
+         else gi[y][x] = (el[y][x-1]*el[y-1][x])%20183;
+
+         el[y][x] = ((gi[y][x]+depth)%20183);
+         type[x][y] = el[y][x]%3;
+         if(x<=maxx & y<=maxy)
+            sum += type[x][y];
+      } //At (6,15) tool: 1 with cost 35
+   cout << "star 1 " << sum << endl;
+   using std::pair;
+   
+//   cout << type[0][0] << type[1][0] << endl;
+//   cout << type[0][1] << type[1][1] << endl;
+
+   using std::make_pair;
+   std::map<Loc,vector<pair<Loc,int>>> m;
+   for(auto y=0;y<gi.size()-1;++y)
+      for(auto x = 0;x<gi[y].size()-1;++x) {
+         Loc l1{x,y,type[x][y]};
+         Loc l2{x,y,(type[x][y]+1)%3};
+         m[l1].push_back(make_pair(l2,7));
+//         cout << l1 << " --> " << l2 << " cost " << 7 << endl;
+         m[l2].push_back(make_pair(l1,7));
+
+         auto locr1 =Loc{x+1,y,type[x+1][y]};
+         auto locr2 =Loc{x+1,y,(type[x+1][y]+1)%3};
+
+         auto connect = [&m](auto && x, auto &&y) {
+            if(x.tool == y.tool) {
+               m[x].push_back(make_pair(y,1));
+//               cout << x << " --> " << y << " cost " << 1 << endl;
+               m[y].push_back(make_pair(x,1));
+//               cout << x << " --> " << y << endl;
+            }
+         };
+
+         connect(l1,locr1);
+         connect(l2,locr1);
+         connect(l1,locr2);
+         connect(l2,locr2);
+
+         auto locd1 =Loc{x,y+1,type[x][y+1]};
+         auto locd2 =Loc{x,y+1,(type[x][y+1]+1)%3};
+
+         connect(l1,locd1);
+         connect(l2,locd1);
+         connect(l1,locd2);
+         connect(l2,locd2);
+      }
+
+   std::set<Loc> visited;
+   std::priority_queue<pair<int,Loc>,vector<pair<int,Loc>>,std::greater<pair<int,Loc>>> q;
+   q.push(make_pair(0,Loc{0,0,0}));
+   while (!q.empty()) { // do Dijkstra-dfs
+      auto [cost,loc] = q.top();
+      q.pop();
+      if (visited.count(loc))
+         continue;
+      visited.insert(loc);
+      if (loc.x==maxx && loc.y==maxy & loc.tool == 0) {
+         cout << "star 2 " << cost << "\n";
+         return;
+      }
+      for(auto [newloc,dcost]:m[loc])
+         q.push(make_pair(cost+dcost,newloc));
+   }
+}
+
+#include <iomanip>
+
+void day23stars() {
+   using std::string;
+   using Int = long long;
+   
+   struct Nanobot {
+      Int x,y,z,r;
+      Int dist(const Nanobot &r) const {
+         return (abs(x-r.x)+abs(y-r.y)+abs(z-r.z));
+      }
+   };
+   
+   auto strToNanoBot = [](const string &s) {
+      std::istringstream sin(s);
+      char _;
+      int x,y,z,r;
+//      pos=<63050011,17169307,53101295>, r=61836378
+//      pos=<19230077,48430355,4672540>, r=65947720
+      sin >>_>>_>>_>>_>>_ >> x >>_ >> y >>_ >> z >>_>>_>>_>>_ >> r;
+      return Nanobot{x,y,z,r};
+   };
+   
+   
+   
+   std::ifstream fin(DIRECTORY + "day23test");
+   const auto nanobots = r::getlines(fin) | rv::transform(strToNanoBot) | r::to_vector;
+   const auto strongest = *r::max_element(nanobots, std::less<>{}, &Nanobot::r);
+   const auto star1 = r::count_if(nanobots,[strongest](auto &&n){return strongest.dist(n) <= strongest.r;});
+   cout << "Day 23 star 1: " << star1 << "\n";
+   
+#define TRANSFORM(x, y) rv::transform([](auto &&x) { return y; })
+   auto [minX,maxX] = r::minmax(nanobots | TRANSFORM(l,l.x));
+   auto [minY,maxY] = r::minmax(nanobots | TRANSFORM(l,l.y));
+   auto [minZ,maxZ] = r::minmax(nanobots | TRANSFORM(l,l.z));
+   
+   
+   cout << "number of points in space: " << (maxX-minX)*(maxY-minY)*(maxZ-minZ) << "\n";
+   cout << "minX = " << minX << " maxX = " << maxX << "\n";
+   
+   unsigned long long sum=0;
+   for(auto &&n:nanobots)
+      sum+= n.r*n.r*n.r;
+   cout << sum << " = sum of radii cubed\n";
+   
+   Int canSee=0;
+   std::vector<Nanobot> ctm;
+
+   auto count=0;
+   Int closestDist = 1;
+   for(auto i=0;i<nanobots.size();++i) {
+      cout << i << " i\n";
+      for(auto j=i+1;j<nanobots.size();++j) {
+//         cout << i << " " <<  j << " " << closestDist << "\n";
+         auto && ni = nanobots[i];
+         auto && nj = nanobots[j];
+         if (ni.dist(nj) <= ni.r+nj.r) {
+            ++count;
+            auto rx = ni.r;
+            for(auto x = ni.x-rx; x<= ni.x+rx; ++x) {
+               auto ry = rx-abs(ni.x-x);
+               for(auto y = ni.y-ry; y<= ni.y+ry; ++y) {
+                  auto rz = ry-abs(ni.y-y);
+                  for(auto z = ni.z-rz; z<= ni.z+rz; ++z) {
+                     Nanobot me{x,y,z,0};
+                     if (me.dist(nj) > nj.r)
+                        continue;
+                     auto hereCanSee = r::count_if(nanobots,[me](auto &&n){return n.dist(me) <= n.r;});
+                     if(hereCanSee == canSee && me.dist({0,0,0,0}) < closestDist)
+                        closestDist = me.dist({0,0,0,0});
+                     else if(hereCanSee > canSee) {
+                        canSee = hereCanSee;
+                        closestDist = me.dist({0,0,0,0});
+                     }
+                  }
+               }
+            }
          }
-         doors[curPos].insert(nextPos);
-         //         doors[nextPos].push_back(curPos);
-         curPos = nextPos;
       }
    }
+   cout << count << " nanobots overlapping ranges" << "\n";
    
-   std::set<Pos> visited;
-   std::queue<std::pair<Pos,int>> q;
-   q.push({{0,0},0});
-   auto longest = 0;
-   auto numGT1000 = 0;
-   while (!q.empty()) { // do a bfs
-      auto [pos,length] = q.front();
-      q.pop();
-      if (visited.count(pos))
-         continue;
-      visited.insert(pos);
-      numGT1000 += (length>=1000);
-      longest = std::max(length,longest);
-      for(auto neighborPos:doors[pos])
-         q.push({neighborPos,length+1});
-   }
-   cout << "Day 20 star 1: " << longest
-   << "\nDay 20 star 2: " << numGT1000 << "\n";
+   cout << closestDist << "\n";
+   
+//   for(auto x = minX; x<=maxX; ++x) {
+////      cout << x << "\n";
+//      for(auto y = minY; y<=maxY; ++y)
+//         for(auto z = minZ; z<=maxZ; ++z) {
+//            Nanobot me{x,y,z,0};
+//            auto hereCanSee = r::count_if(nanobots,[me](auto &&n){return n.dist(me) <= n.r;});
+//            if(hereCanSee == canSee)
+//               ctm.push_back(me);
+//            else if(hereCanSee > canSee) {
+//               canSee = hereCanSee;
+//               ctm = {me};
+//            }
+//         }
+//   }
+//
+//   auto best = r::min(ctm,r::less{},[](auto &&n){return n.dist({0,0,0,0});});
+//
+//   cout << best.dist({0,0,0,0}) << "\n";
+   
 }
 
 int main() {
@@ -134,7 +303,7 @@ int main() {
 //   day7stars();
 //   day8stars();
 //   day9stars();
-   day10stars();
+//   day10stars();
 //   day11stars();
 //   day12stars();
 //   day13stars();
@@ -144,7 +313,9 @@ int main() {
 //   day17stars();
 //   day18stars();
 //   day19stars();
-   day20stars();
+//   day20stars();
 //   day21stars();
+//   day22stars();
+   day23stars();
    return 0;
 }
