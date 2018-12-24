@@ -255,8 +255,8 @@ using std::vector;
 Int canSee=0;
 Int closestDist = 1;
 
-void doSmall(const vector<int> v, int i, BoundingBox u) {
-   if(i==v.size()-1) return;
+void doSmall(const vector<int> &v, int i, const BoundingBox &u) {
+   if(i==v.size()-1) return; //!!! if (i > v.size()-canSee)
    BoundingBox b(nanobots[v[i]]);
    cout << "Counting nanobot " << i << " of " << v.size() << " " << b << endl;
    using std::max;
@@ -265,7 +265,7 @@ void doSmall(const vector<int> v, int i, BoundingBox u) {
       for(auto y = max(b.sy,u.sy); y<=min(b.by,u.by); ++y)
          for(auto z = max(b.sz,u.sy); z<=min(b.bz,u.bz); ++z) {
             Nanobot me{x,y,z,0};
-            auto hereCanSee = r::count_if(v.begin()+i+1,v.end(),[&](auto t){return nanobots[t].dist(me) <= nanobots[t].r;});
+            auto hereCanSee = r::count_if(v.begin()+i+1,v.end(),[&](auto t){return nanobots[t].dist(me) <= nanobots[t].r;}); //
             if(hereCanSee == canSee && me.dist({0,0,0,0}) < closestDist)
                closestDist = me.dist({0,0,0,0});
             else if(hereCanSee > canSee) {
@@ -273,6 +273,7 @@ void doSmall(const vector<int> v, int i, BoundingBox u) {
                closestDist = me.dist({0,0,0,0});
             }
          }
+   doSmall(v,i+1,u);
 }
 
 void solveFor(const vector<int> v, BoundingBox b) {
@@ -291,8 +292,9 @@ void solveFor(const vector<int> v, BoundingBox b) {
    }
    cout << xc << " " << yc << " " << zc << "\n";
    if (v.size() == xc && xc == yc && yc==zc) {
-      cout << "Can't split further " << xc << " " << b <<endl;
+      cout << "Can't split further " << xc << " " << b << endl;
       doSmall(v,0,b);
+      return;
    }
    if (xc<=yc && xc<=zc) {//split on x
       vector<int> left;
