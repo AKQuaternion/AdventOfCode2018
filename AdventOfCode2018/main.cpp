@@ -82,6 +82,8 @@ namespace day23 {
    using std::string;
    using Int = long long;
    
+   class BoundingBox;
+   
    struct Nanobot {
       Int x,y,z,r;
       Int dist(const Nanobot &r) const {
@@ -90,19 +92,24 @@ namespace day23 {
       friend std::ostream& operator<<(std::ostream& os, const Nanobot &n) {
          return os << "(" << n.x << "," << n.y << "," << n.z << ")" << n.r;
       }
-      bool intersects (const Nanobot & other) const {
-         return dist(other) <= r+other.r;
+//      bool intersects (const Nanobot & other) const {
+//         return dist(other) <= r+other.r;
+//      }
+      bool contains (Int px, Int py, Int pz) const {
+         return (abs(x-px)+abs(y-py)+abs(z-pz)<=r);
       }
-      std::vector<Nanobot> vertices() {
-         std::vector<Nanobot> ret;
-         ret.push_back({x-r,y,z,0});
-         ret.push_back({x+r,y,z,0});
-         ret.push_back({x,y-r,z,0});
-         ret.push_back({x,y+r,z,0});
-         ret.push_back({x,y,z-r,0});
-         ret.push_back({x,y,z+r,0});
-         return ret;
-      }
+      bool contains (const BoundingBox &b) const;
+      bool intersects (const BoundingBox &b) const;
+//      std::vector<Nanobot> vertices() {
+//         std::vector<Nanobot> ret;
+//         ret.push_back({x-r,y,z,0});
+//         ret.push_back({x+r,y,z,0});
+//         ret.push_back({x,y-r,z,0});
+//         ret.push_back({x,y+r,z,0});
+//         ret.push_back({x,y,z-r,0});
+//         ret.push_back({x,y,z+r,0});
+//         return ret;
+//      }
    };
    
    struct BoundingBox {
@@ -110,24 +117,47 @@ namespace day23 {
       bool intersects(const BoundingBox r) const {
          return sx<=r.bx && r.sx<=bx && sy<=r.by && r.sy<=by && sz<=r.bz && r.sz<=bz;
       }
-      BoundingBox(const Nanobot &n):
-      sx(n.x-n.r),bx(n.x+n.r),
-      sy(n.y-n.r),by(n.y+n.r),
-      sz(n.z-n.r),bz(n.z+n.r)
-      {}
+//      BoundingBox(const Nanobot &n):
+//      sx(n.x-n.r),bx(n.x+n.r),
+//      sy(n.y-n.r),by(n.y+n.r),
+//      sz(n.z-n.r),bz(n.z+n.r)
+//      {}
       BoundingBox() = default;
       BoundingBox(Int sx,Int sy,Int sz, Int bx, Int by, Int bz):
-      sx(sx),sy(sy),sz(sz),bx(bx),by(by),bz(bz) {}
+         sx(sx),sy(sy),sz(sz),bx(bx),by(by),bz(bz) {}
+      
       Int xSize() const { return bx-sx+1;}
       Int ySize() const { return by-sy+1;}
       Int zSize() const { return bz-sz+1;}
 
+      bool contains(Int px, Int py, Int pz) const {
+         return sx<px && px<bx && sy<py && py<by && sz<pz && pz<bz;
+      }
+      
       friend std::ostream& operator<<(std::ostream &os, const BoundingBox &b) {
          return os << "x(" << b.sx << "," << b.bx << ") y(" << b.sy << "," << b.by << ") z(" << b.sz << "," << b.bz << ") [" <<
          b.xSize() << "," << b.ySize() << "," << b.zSize() << "]";
       }
    };
    
+   bool Nanobot::intersects (const BoundingBox &b) const {
+      return contains(b.sx,b.sy,b.sz) ||
+      contains(b.sx,b.sy,b.bz) ||
+      contains(b.sx,b.by,b.sz) ||
+      contains(b.sx,b.by,b.bz) ||
+      contains(b.bx,b.sy,b.sz) ||
+      contains(b.bx,b.sy,b.bz) ||
+      contains(b.bx,b.by,b.sz) ||
+      contains(b.bx,b.by,b.bz) ||
+      b.contains(x-r,y  ,z  ) ||
+      b.contains(x+r,y  ,z  ) ||
+      b.contains(x  ,y-r,z  ) ||
+      b.contains(x  ,y+r,z  ) ||
+      b.contains(x  ,y  ,z-r) ||
+      b.contains(x  ,y  ,z+r);
+   }
+
+
 #define TRANSFORM(x, y) rv::transform([](auto &&x) { return y; })
    
    std::vector<Nanobot> nanobots;
@@ -152,8 +182,8 @@ namespace day23 {
    //}
    using std::pair;
    using std::vector;
-   Int canSee=1;
-   Int closestDist = 1;
+   Int canSee=865;
+   Int closestDist = 66060025+1;
    //
    //int most(int i, const vector<int> &v, std::vector<int> & which, Nanobot& me) {
    //   if(i==v.size())
@@ -209,83 +239,140 @@ namespace day23 {
    //
    //}
    
-   using Qvalue = std::tuple<int,std::vector<int>,BoundingBox>;
+   using Qvalue = std::tuple<int,BoundingBox>;
    auto compare = [](const Qvalue &l, const Qvalue &r) { return std::get<0>(l) < std::get<0>(r);};
    std::priority_queue<Qvalue,vector<Qvalue>,decltype(compare)> q(compare);
    
+   template <typename T> int sgn(T val) {
+      return (T(0) < val) - (val < T(0));
+   }
+   
    void split() {
       while (!q.empty()) {
-         auto [num,v,b] = q.top();
+         auto [num,b] = q.top();
          q.pop();
          if (num<=canSee)
             continue;
-         if(b.xSize()==1 && b.ySize()==1 && b.zSize()==1) {
-            Nanobot me{b.sx,b.sy,b.sz,0};
-            auto hereCanSee = r::count_if(v,[me](auto i){return nanobots[i].dist(me) <= nanobots[i].r;});
-            if(hereCanSee == canSee && me.dist({0,0,0,0}) < closestDist)
-               closestDist = me.dist({0,0,0,0});
-            else if(hereCanSee > canSee) {
-               canSee = hereCanSee;
-               closestDist = me.dist({0,0,0,0});
-            }
+//         using std::min;
+//         Int mx,my,mz;
+//         if (sgn(b.sx) != sgn(b.bx)) mx = 0;
+//         else mx = min(abs(b.sx),abs(b.bx));
+//         if (sgn(b.sy) != sgn(b.by)) my = 0;
+//         else my = min(abs(b.sy),abs(b.by));
+//         if (sgn(b.sz) != sgn(b.bz)) mz = 0;
+//         else mz = min(abs(b.sz),abs(b.bz));
+//         if(mx+my+mz >= closestDist)
+//            continue;
+         if(b.xSize()<=50 && b.ySize()<= 50 && b.zSize() <= 50) {
+//            cout << b.xSize() << " " << b.ySize() << " " << b.zSize() << " " << b.xSize()/50*b.ySize()/50*b.zSize()/50 << "\n";
+            for(Int x=b.sx;x<=b.bx;++x)
+               for(Int y=b.sy; y<=b.by; ++y)
+                  for(Int z = b.sz; z<= b.bz; ++z) {
+                     Nanobot me{x,y,z,0};
+                     auto hereCanSee = r::count_if(nanobots,[me](const auto &n){return n.dist(me) <= n.r;});
+                     if(hereCanSee == canSee && me.dist({0,0,0,0}) < closestDist)
+                        closestDist = me.dist({0,0,0,0});
+                     else if(hereCanSee > canSee) {
+                        canSee = hereCanSee;
+                        closestDist = me.dist({0,0,0,0});
+                        cout << me << endl;
+                     }
+                  }
             continue;
          }
-         cout << v.size() << b << " can see:" << canSee << " dist: " << closestDist << endl;   if (b.xSize() > b.ySize() && b.xSize() > b.zSize()) {//split on x
+//         if(b.xSize()==1 && b.ySize()==1 && b.zSize()==1) {
+//            Nanobot me{b.sx,b.sy,b.sz,0};
+//            auto hereCanSee = r::count_if(v,[me](auto i){return nanobots[i].dist(me) <= nanobots[i].r;});
+//            if(hereCanSee == canSee && me.dist({0,0,0,0}) < closestDist)
+//               closestDist = me.dist({0,0,0,0});
+//            else if(hereCanSee > canSee) {
+//               canSee = hereCanSee;
+//               closestDist = me.dist({0,0,0,0});
+//            }
+//            continue;
+//         }
+         if(b.xSize()>100 && b.ySize()>100 && b.zSize()>100)
+            cout << q.size() << " " << b << " can see:" << canSee << " dist: " << closestDist << endl;
+         if (b.xSize() > b.ySize() && b.xSize() > b.zSize()) {//split on x
             Int mx = b.sx + (b.bx-b.sx)/2;
-            vector<int> left;
-            vector<int> right;
-            for(auto i:v) {
-               auto &n=nanobots[i];
+//            vector<int> left;
+//            vector<int> right;
+//            for(auto i:v) {
+//               auto &n=nanobots[i];
+//               if(n.x-n.r <= mx)
+//                  left.push_back(i);
+//               if(n.x+n.r > mx)
+//                  right.push_back(i);
+//            }
+            int left=0;
+            int right=0;
+            for(const auto &n:nanobots) {
                if(n.x-n.r <= mx)
-                  left.push_back(i);
+                  ++left;
                if(n.x+n.r > mx)
-                  right.push_back(i);
+                  ++right;
             }
             BoundingBox lBox{b};
             lBox.bx = mx;
             BoundingBox rBox{b};
             rBox.sx = mx+1;
             //      cout << v.size() << " -x-> " << left.size() << "," << right.size() << b <<"\n";//<< "->" << lBox << ":" << rBox << " can see:" << canSee << " dist: " << closestDist << endl;
-            q.push(make_tuple(left.size(),left,lBox));
-            q.push(make_tuple(right.size(),right,rBox));
+            if(left>canSee) q.push(std::make_tuple(left,lBox));
+            if(right>canSee) q.push(std::make_tuple(right,rBox));
          }
          else if (b.ySize() > b.zSize()) {//split on y
             Int my = b.sy + (b.by-b.sy)/2;
-            vector<int> left;
-            vector<int> right;
-            for(auto i:v) {
-               auto &n=nanobots[i];
+//            vector<int> left;
+//            vector<int> right;
+//            for(auto i:v) {
+//               auto &n=nanobots[i];
+//               if(n.y-n.r <= my)
+//                  left.push_back(i);
+//               if(n.y+n.r > my)
+//                  right.push_back(i);
+//            }
+            int left=0;
+            int right=0;
+            for(const auto &n:nanobots) {
                if(n.y-n.r <= my)
-                  left.push_back(i);
+                  ++left;
                if(n.y+n.r > my)
-                  right.push_back(i);
+                  ++right;
             }
             BoundingBox lBox{b};
             lBox.by = my;
             BoundingBox rBox{b};
             rBox.sy = my+1;
             //      cout << v.size() << " -y-> " << left.size() << "," << right.size() << b <<"\n";//<< "->" << lBox << ":" << rBox << " can see:" << canSee << " dist: " << closestDist << endl;
-            q.push(make_tuple(left.size(),left,lBox));
-            q.push(make_tuple(right.size(),right,rBox));
+            if(left>canSee) q.push(std::make_tuple(left,lBox));
+            if(right>canSee) q.push(std::make_tuple(right,rBox));
          }
          else {//split on z
             Int mz = b.sz + (b.bz-b.sz)/2;
-            vector<int> left;
-            vector<int> right;
-            for(auto i:v) {
-               auto &n=nanobots[i];
+//            vector<int> left;
+//            vector<int> right;
+//            for(auto i:v) {
+//               auto &n=nanobots[i];
+//               if(n.z-n.r <= mz)
+//                  left.push_back(i);
+//               if(n.z+n.r > mz)
+//                  right.push_back(i);
+//            }
+            int left=0;
+            int right=0;
+            for(const auto &n:nanobots) {
                if(n.z-n.r <= mz)
-                  left.push_back(i);
+                  ++left;
                if(n.z+n.r > mz)
-                  right.push_back(i);
+                  ++right;
             }
             BoundingBox lBox{b};
             lBox.bz = mz;
             BoundingBox rBox{b};
             rBox.sz = mz+1;
             //      cout << v.size() << " -z-> " << left.size() << "," << right.size() << b <<"\n";// << "->" << lBox << ":" << rBox << " can see:" << canSee << " dist: " << closestDist << endl;
-            q.push(make_tuple(left.size(),left,lBox));
-            q.push(make_tuple(right.size(),right,rBox));
+            if(left>canSee) q.push(std::make_tuple(left,lBox));
+            if(right>canSee) q.push(std::make_tuple(right,rBox));
          }
       }
    }
@@ -344,13 +431,27 @@ void day23stars() {
       sum+= n.r*n.r*n.r;
    cout << sum << " = sum of radii cubed\n";
    
-   vector<int> allIndices = rv::iota(0, nanobots.size()) | r::to_vector;
-   q.push(std::make_tuple(allIndices.size(),allIndices,BoundingBox{minX,minY,minZ,maxX,maxY,maxZ}));
+   int count=0;
+   for(auto &n:nanobots) {
+      Nanobot me{25306370,12353038,28843468,0};
+      if(n.dist(me) <= n.r)
+         ++count;
+   }
+   
+   cout << count << "\n";
+   
+   q.push(std::make_tuple(nanobots.size(),BoundingBox{minX,minY,minZ,maxX,maxY,maxZ}));
    split();
    cout << canSee << " <-see closestDist-> " << closestDist << "\n";
    
+   //66502838
    //68945139 is too low
    //79582722 is too high
+   //79582607
+   //79582567
+   //79582523 still too high
+   //79582369
+   //79582130
    cout << closestDist << "\n";
    //   std::vector<int> v;
    //   most(0,BoundingBox{minX,minY,minZ,maxX,maxY,maxZ},v);
